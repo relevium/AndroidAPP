@@ -20,6 +20,7 @@
         android:layout_width="300dp"
         android:layout_height="wrap_content"
         android:inputType="textEmailAddress"
+        android:id="@+id/username"
         android:hint="@string/email_hint"
         android:layout_marginLeft="20dp"
         android:layout_marginRight="20dp"
@@ -30,6 +31,7 @@
         android:layout_width="300dp"
         android:layout_height="wrap_content"
         android:inputType="textPassword"
+        android:id="@+id/password"
         android:hint="@string/password_hint"
         android:gravity="center"
         android:layout_marginLeft="20dp"
@@ -39,7 +41,8 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-
+        android:id="@+id/login"
+        android:text="@string/button1_log_in"
         android:layout_marginLeft="20dp"
         android:layout_marginRight="20dp"
         android:layout_marginBottom="6dp"
@@ -59,18 +62,21 @@
         <Button
             android:layout_width="42.54dp"
             android:layout_height="42.54dp"
+            android:id="@+id/google"
             android:text="G"
             android:layout_marginRight="11dp"/>
 
         <Button
             android:layout_width="42.54dp"
             android:layout_height="42.54dp"
+            android:id="@+id/facebook"
             android:layout_marginRight="11dp"
             android:text="F"/>
 
         <Button
             android:layout_width="42.54dp"
             android:layout_height="42.54dp"
+            android:id="@+id/twitter"
             android:text="T"/>
 
     </LinearLayout>
@@ -78,6 +84,8 @@
     <Button
         android:layout_width="160.5dp"
         android:layout_height="48.25dp"
+        android:text="@string/button2_register"
+        android:id="@+id/register"
         android:layout_marginLeft="20dp"
         android:layout_marginRight="20dp"
         android:layout_marginBottom="20dp"
