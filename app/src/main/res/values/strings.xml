@@ -5,4 +5,5 @@
     <string name="image_desc">Application logo</string>
     <string name="password_hint">Enter your password</string>
     <string name="email_hint">Enter your email</string>
+    <string name="register_activity">Register</string>
 </resources>
