@@ -1,3 +1,8 @@
 <resources>
-    <string name="app_name">ReleviumFinal</string>
+    <string name="app_name">Relevium</string>
+    <string name="button1_log_in">Log in</string>
+    <string name="button2_register">Register</string>
+    <string name="image_desc">Application logo</string>
+    <string name="password_hint">Enter your password</string>
+    <string name="email_hint">Enter your email</string>
 </resources>
