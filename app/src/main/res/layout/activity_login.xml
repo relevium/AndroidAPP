@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF"
+    android:gravity="center_horizontal"
+    tools:context=".LoginActivity">
+
+    <ImageView
+        android:layout_width="88dp"
+        android:layout_height="88dp"
+        android:layout_marginTop="83dp"
+        android:src="@drawable/relevium"
+        android:layout_marginBottom="23dp"
+        android:contentDescription="@string/image_desc"/>
+
+    <EditText
+        android:layout_width="300dp"
+        android:layout_height="wrap_content"
+        android:inputType="textEmailAddress"
+        android:id="@+id/username"
+        android:hint="@string/email_hint"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:layout_marginBottom="20dp"
+        android:gravity="center"/>
+
+    <EditText
+        android:layout_width="300dp"
+        android:layout_height="wrap_content"
+        android:inputType="textPassword"
+        android:id="@+id/password"
+        android:hint="@string/password_hint"
+        android:gravity="center"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:layout_marginBottom="20dp"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/login"
+        android:text="@string/button1_log_in"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:layout_marginBottom="6dp"
+        android:textColor="#FFFFFF"/>
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="24dp"/>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="55dp"
+        android:layout_gravity="center"
+        android:orientation="horizontal">
+
+        <Button
+            android:layout_width="42.54dp"
+            android:layout_height="42.54dp"
+            android:id="@+id/google"
+            android:text="G"
+            android:layout_marginRight="11dp"/>
+
+        <Button
+            android:layout_width="42.54dp"
+            android:layout_height="42.54dp"
+            android:id="@+id/facebook"
+            android:layout_marginRight="11dp"
+            android:text="F"/>
+
+        <Button
+            android:layout_width="42.54dp"
+            android:layout_height="42.54dp"
+            android:id="@+id/twitter"
+            android:text="T"/>
+
+    </LinearLayout>
+
+    <Button
+        android:layout_width="160.5dp"
+        android:layout_height="48.25dp"
+        android:text="@string/button2_register"
+        android:id="@+id/register"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:layout_marginBottom="20dp"
+        android:textColor="#FFFFFF"/>
+
+</LinearLayout>
