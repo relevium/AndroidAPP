@@ -6,11 +6,14 @@
     <string name="password_hint">Enter your password</string>
     <string name="email_hint">Enter your email</string>
     <string name="register_activity">Register</string>
+    <string name="login_activity">Login</string>
     <string name="firstname">Enter your first name</string>
     <string name="lastname">Enter your last name</string>
     <string name="username">Enter your username</string>
     <string name="email">Enter your email</string>
     <string name="password">Enter your password</string>
     <string name="re_password">Re-Enter your password</string>
+    <string name="map_category">Map</string>
+    <string name="agent_category">Agent</string>
 
 </resources>

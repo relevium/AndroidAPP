@@ -6,6 +6,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -22,7 +23,7 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_login);
 
         //get the resource id from xml file
         loginBtn = (Button) findViewById(R.id.login);
@@ -39,10 +40,16 @@ public class LoginActivity extends AppCompatActivity {
             // The code in this method will be executed when the Login-in button is clicked on.
             @Override
             public void onClick(View view) {
-                // Create a new intent to open the {@link NumbersActivity}
-                // Intent numbersIntent = new Intent(MainActivity.this, NumbersActivity.class);
-                // Start the new activity
-                //startActivity(numbersIntent);
+                if(userNameEdt.getText().toString().equals("admin") && passwordEdt.getText().toString().equals("admin")){
+                    // Create a new intent to open the {@link NumbersActivity}
+                    Intent mainActivity = new Intent(LoginActivity.this, MainActivity.class);
+                    // Start the new activity
+                    startActivity(mainActivity);
+                }
+                else{
+                    Toast.makeText(LoginActivity.this, "Wrong user name or password", Toast.LENGTH_SHORT).show();
+                }
+
             }
         });
 

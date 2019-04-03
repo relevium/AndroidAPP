@@ -33,14 +33,16 @@ public class FragmentPagerAdapter extends android.support.v4.app.FragmentPagerAd
 
     @Override
     public int getCount() {
-        return 4;
+        return 2;
     }
 
     @Override
     public Fragment getItem(int position) {
         switch(position){
             case 0:
-                //return new NumbersFragment();
+                return new AgentFragment();
+            case 1:
+                return new MapFragment();
             default:
                 return null;
         }
@@ -50,7 +52,9 @@ public class FragmentPagerAdapter extends android.support.v4.app.FragmentPagerAd
     public CharSequence getPageTitle(int position) {
         switch(position){
             case 0:
-                //return mContext.getString(R.string.category_numbers);
+                return mContext.getString(R.string.agent_category);
+            case 1:
+                return mContext.getString(R.string.map_category);
             default:
                 return null;
         }
