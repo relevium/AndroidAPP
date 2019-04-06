@@ -1,14 +1,20 @@
 package com.example.android.releviumfinal;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -17,8 +23,11 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Toast;
 
+import com.github.clans.fab.FloatingActionButton;
+import com.github.clans.fab.FloatingActionMenu;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
@@ -27,7 +36,10 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 
 
 public class MainActivity extends AppCompatActivity
@@ -39,6 +51,9 @@ public class MainActivity extends AppCompatActivity
     private Location mLastLocation;
     private LocationRequest mLocationRequest;
     private SupportMapFragment mapFragment;
+
+
+    FloatingActionButton mFAB1,mFAB2,mFAB3;
 
     private static final int LOCATION_REQUEST_CODE = 1;
 
@@ -72,9 +87,56 @@ public class MainActivity extends AppCompatActivity
             mapFragment.getMapAsync(this);
         }
 
+        mFAB1 = findViewById(R.id.fab_warning);
+        mFAB1.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view){
+                addMarker("Warning!", R.drawable.ic_menu_sos);
+            }
+        });
+
+        mFAB2 = findViewById(R.id.fab_fire);
+        mFAB2.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view){
+                addMarker("Fire!", R.drawable.ic_fab_fire);
+            }
+        });
+
+        mFAB3 = findViewById(R.id.fab_pin);
+        mFAB3.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view){
+                addMarker("User Pin", R.drawable.ic_fab_pin);
+            }
+        });
+
+    }
+    public static BitmapDescriptor generateBitmapDescriptorFromRes(
+            Context context, int resId) {
+        Drawable drawable = ContextCompat.getDrawable(context, resId);
+        drawable.setBounds(
+                0,
+                0,
+                drawable.getIntrinsicWidth(),
+                drawable.getIntrinsicHeight());
+        Bitmap bitmap = Bitmap.createBitmap(
+                drawable.getIntrinsicWidth(),
+                drawable.getIntrinsicHeight(),
+                Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        drawable.draw(canvas);
+        return BitmapDescriptorFactory.fromBitmap(bitmap);
     }
 
-
+    public void addMarker(String message, int image){
+        Bitmap bmp = BitmapFactory.decodeResource(getResources(), image);
+        LatLng userLocation = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
+        mMap.addMarker(new MarkerOptions()
+                .position(userLocation)
+                .title(message)
+                .icon(generateBitmapDescriptorFromRes(this,image)));
+    }
     @Override
     public void onMapReady(GoogleMap googleMap) {
         Log.v("TEST123", "OnMapReady");
