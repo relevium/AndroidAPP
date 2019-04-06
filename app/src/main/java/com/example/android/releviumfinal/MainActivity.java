@@ -1,6 +1,7 @@
 package com.example.android.releviumfinal;
 
 import android.content.Intent;
+import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
@@ -13,18 +14,31 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import com.mapbox.android.core.location.LocationEngine;
+import com.mapbox.android.core.location.LocationEngineProvider;
+import com.mapbox.android.core.permissions.PermissionsListener;
+import com.mapbox.android.core.permissions.PermissionsManager;
 import com.mapbox.mapboxsdk.Mapbox;
 import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
 import com.mapbox.mapboxsdk.maps.Style;
+import com.mapbox.mapboxsdk.plugins.locationlayer.LocationLayerPlugin;
+
+import java.util.List;
 
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+        implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, PermissionsListener{
 
     protected DrawerLayout drawer;
     private MapView mapView;
+    private MapboxMap map;
+    private PermissionsManager permissionsManager;
+    private LocationEngine locationEngine;
+    private LocationLayerPlugin locationLayerPlugin;
+    private Location originLocation;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,6 +71,48 @@ public class MainActivity extends AppCompatActivity
                 });
             }
         });
+    }
+
+    @Override
+    public void onMapReady(@NonNull MapboxMap mapboxMap) {
+        map = mapboxMap;
+        enableLocation();
+    }
+
+    private void enableLocation() {
+        if (PermissionsManager.areLocationPermissionsGranted(this)){
+            initializeLocationEngine();
+            initializeLocationLayer();
+        }
+        else {
+            permissionsManager = new PermissionsManager(this);
+            permissionsManager.requestLocationPermissions(this);
+        }
+    }
+
+    private void initializeLocationEngine(){
+        locationEngine = new LocationEngineProvider().;
+    }
+
+    private void initializeLocationLayer(){
+
+    }
+
+    @Override
+    public void onExplanationNeeded(List<String> permissionsToExplain) {
+        Toast.makeText(this, "You need to enable location for best user experience", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    @Override
+    public void onPermissionResult(boolean granted) {
+        if (granted){
+            enableLocation();
+        }
     }
 
     @Override
