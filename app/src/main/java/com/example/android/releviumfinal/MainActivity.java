@@ -14,20 +14,28 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.mapbox.mapboxsdk.Mapbox;
+import com.mapbox.mapboxsdk.maps.MapView;
+import com.mapbox.mapboxsdk.maps.MapboxMap;
+import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
+import com.mapbox.mapboxsdk.maps.Style;
+
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
+    protected DrawerLayout drawer;
+    private MapView mapView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Mapbox.getInstance(this, "pk.eyJ1IjoibW9oYW1lZDY2NjMiLCJhIjoiY2p1NGJ4OGoxMHRmazQ0bzE5Mng0NXpseSJ9.HVTu0BfhvTTSv4woLCorJA");
+        Mapbox.getInstance(this, getString(R.string.access_token));
         setContentView(R.layout.activity_main);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
@@ -36,17 +44,24 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        if(savedInstanceState == null){
-//            Intent map = new Intent(MainActivity.this, MapActivity.class);
-//            startActivity(map);
-            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
-                    new MapFragment()).commit();
-        }
+        mapView = findViewById(R.id.mapView);
+        mapView.onCreate(savedInstanceState);
+        mapView.getMapAsync(new OnMapReadyCallback() {
+            @Override
+            public void onMapReady(@NonNull MapboxMap mapboxMap) {
+                mapboxMap.setStyle(Style.MAPBOX_STREETS, new Style.OnStyleLoaded() {
+                    @Override
+                    public void onStyleLoaded(@NonNull Style style) {
+                        // Map is set up and the style has loaded. Now you can add data or make other map adjustments
+                    }
+                });
+            }
+        });
     }
 
     @Override
     public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
@@ -82,28 +97,65 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_map) {
-            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
-                    new MapFragment()).commit();
-//            Intent map = new Intent(MainActivity.this, MapActivity.class);
-//            startActivity(map);
-        } else if (id == R.id.nav_agent) {
-            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
-                    new AgentFragment()).commit();
+        if (id == R.id.nav_agent) {
+            Intent agentActivity = new Intent(this, AgentActivity.class);
+            startActivity(agentActivity);
         } else if (id == R.id.nav_account) {
-            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
-                    new ProfileFragment()).commit();
+            Intent profileActivity = new Intent(this, ProfileActivity.class);
+            startActivity(profileActivity);
         } else if (id == R.id.nav_chat) {
-            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
-                    new ChatFragment()).commit();
+            Intent chatActivity = new Intent(this, ChatActivity.class);
+            startActivity(chatActivity);
         } else if (id == R.id.nav_share) {
             Toast.makeText(this, "Location shared!", Toast.LENGTH_SHORT).show();
         } else if (id == R.id.nav_sos) {
             Toast.makeText(this, "SOS sent!", Toast.LENGTH_SHORT).show();
         }
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        mapView.onStart();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        mapView.onResume();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        mapView.onPause();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        mapView.onStop();
+    }
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        mapView.onLowMemory();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mapView.onDestroy();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        mapView.onSaveInstanceState(outState);
     }
 }

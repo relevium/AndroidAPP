@@ -43,10 +43,33 @@
         </activity>
 
         <activity
-            android:name=".MapActivity"
-            android:label="@string/map_category">
+            android:name=".ProfileActivity"
+            android:label="@string/profile_category"
+            android:parentActivityName=".MainActivity">
             <!-- Parent activity meta-data to support 4.0 and lower -->
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MainActivity"/>
+        </activity>
 
+        <activity
+            android:name=".ChatActivity"
+            android:label="@string/chat_category"
+            android:parentActivityName=".MainActivity">
+            <!-- Parent activity meta-data to support 4.0 and lower -->
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MainActivity"/>
+        </activity>
+
+        <activity
+            android:name=".AgentActivity"
+            android:label="@string/agent_category"
+            android:parentActivityName=".MainActivity">
+            <!-- Parent activity meta-data to support 4.0 and lower -->
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MainActivity"/>
         </activity>
     </application>
 

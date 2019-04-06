@@ -13,8 +13,9 @@
     <string name="email">Enter your email</string>
     <string name="password">Enter your password</string>
     <string name="re_password">Re-Enter your password</string>
-    <string name="map_category">Map</string>
     <string name="agent_category">Agent</string>
+    <string name="profile_category">Profile</string>
+    <string name="chat_category">Chat</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="nav_header_title">Mohamed ELTorky</string>
