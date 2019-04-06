@@ -3,6 +3,7 @@
     package="com.example.android.releviumfinal">
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
         android:allowBackup="true"
@@ -39,6 +40,13 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".LoginActivity"/>
+        </activity>
+
+        <activity
+            android:name=".MapActivity"
+            android:label="@string/map_category">
+            <!-- Parent activity meta-data to support 4.0 and lower -->
+
         </activity>
     </application>
 
