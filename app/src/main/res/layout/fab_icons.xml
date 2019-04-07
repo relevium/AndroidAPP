@@ -21,8 +21,8 @@
         fab:menu_shadowRadius="4dp"
         fab:menu_shadowXOffset="1dp"
         fab:menu_shadowYOffset="3dp"
-        fab:menu_colorNormal="#DA4336"
-        fab:menu_colorPressed="#E75043"
+        fab:menu_colorNormal="#284ae0"
+        fab:menu_colorPressed="#426fff"
         fab:menu_colorRipple="#99FFFFFF"
         fab:menu_animationDelayPerItem="50"
         fab:menu_icon="@drawable/fab_add"
@@ -57,6 +57,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/ic_menu_sos"
+            fab:fab_colorPressed="#426fff"
+            fab:fab_colorNormal="#284ae0"
             fab:fab_size="mini"
             fab:fab_label="Warning!" />
         <com.github.clans.fab.FloatingActionButton
@@ -64,6 +66,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/ic_fab_fire"
+            fab:fab_colorPressed="#426fff"
+            fab:fab_colorNormal="#284ae0"
             fab:fab_size="mini"
             fab:fab_label="FIRE!" />
 
@@ -72,6 +76,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/ic_fab_pin"
+            fab:fab_colorPressed="#426fff"
+            fab:fab_colorNormal="#284ae0"
             fab:fab_size="mini"
             fab:fab_label="Pin location" />
 
