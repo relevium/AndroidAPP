@@ -1,0 +1,77 @@
+{
+  "project_info": {
+    "project_number": "368068779189",
+    "firebase_url": "https://relevium-maps.firebaseio.com",
+    "project_id": "relevium-maps",
+    "storage_bucket": "relevium-maps.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:368068779189:android:5ae8c3f6c22426cf",
+        "android_client_info": {
+          "package_name": "com.example.android.releviumfinal"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "368068779189-4tdl5of1ral4ltc9455ksjsgiujgsr42.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.android.releviumfinal",
+            "certificate_hash": "133573f3ad977f3f40de600a6b0d2a2014b45159"
+          }
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBjcqeXjBw1Osj13WBkgIJ_5pEMt7B1vBA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "368068779189-62ih1cgetv94ovp1fkfi3o95kssknbam.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:368068779189:android:7e31ca48f97d9924",
+        "android_client_info": {
+          "package_name": "com.example.geolocation"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "368068779189-m62k6t7hctmiqoq9v7v61n2m61pi0m7j.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.geolocation",
+            "certificate_hash": "133573f3ad977f3f40de600a6b0d2a2014b45159"
+          }
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBjcqeXjBw1Osj13WBkgIJ_5pEMt7B1vBA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "368068779189-62ih1cgetv94ovp1fkfi3o95kssknbam.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
