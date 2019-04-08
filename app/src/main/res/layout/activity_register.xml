@@ -9,6 +9,7 @@
     tools:context=".MainActivity">
 
     <EditText
+        android:background="@drawable/rounded_corners_login"
         android:layout_width="300dp"
         android:layout_height="wrap_content"
         android:inputType="text"
@@ -19,6 +20,7 @@
         android:layout_marginBottom="20dp"
         android:gravity="center"/>
     <EditText
+        android:background="@drawable/rounded_corners_login"
         android:layout_width="300dp"
         android:layout_height="wrap_content"
         android:inputType="text"
@@ -29,16 +31,7 @@
         android:layout_marginBottom="20dp"
         android:gravity="center"/>
     <EditText
-        android:layout_width="300dp"
-        android:layout_height="wrap_content"
-        android:inputType="text"
-        android:id="@+id/username_register"
-        android:hint="@string/username"
-        android:layout_marginLeft="20dp"
-        android:layout_marginRight="20dp"
-        android:layout_marginBottom="20dp"
-        android:gravity="center"/>
-    <EditText
+        android:background="@drawable/rounded_corners_login"
         android:layout_width="300dp"
         android:layout_height="wrap_content"
         android:inputType="textEmailAddress"
@@ -49,6 +42,7 @@
         android:layout_marginBottom="20dp"
         android:gravity="center"/>
     <EditText
+        android:background="@drawable/rounded_corners_login"
         android:layout_width="300dp"
         android:layout_height="wrap_content"
         android:inputType="textPassword"
@@ -59,6 +53,7 @@
         android:layout_marginBottom="20dp"
         android:gravity="center"/>
     <EditText
+        android:background="@drawable/rounded_corners_login"
         android:layout_width="300dp"
         android:layout_height="wrap_content"
         android:inputType="textPassword"
