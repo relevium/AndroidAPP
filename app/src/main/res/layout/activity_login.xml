@@ -19,6 +19,7 @@
     <EditText
         android:layout_width="300dp"
         android:layout_height="wrap_content"
+        android:background="@drawable/rounded_corners_login"
         android:inputType="textEmailAddress"
         android:id="@+id/username"
         android:hint="@string/email_hint"
@@ -29,6 +30,7 @@
 
     <EditText
         android:layout_width="300dp"
+        android:background="@drawable/rounded_corners_login"
         android:layout_height="wrap_content"
         android:inputType="textPassword"
         android:id="@+id/password"
