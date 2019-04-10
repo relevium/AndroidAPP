@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
@@ -29,7 +28,6 @@ import android.widget.Toast;
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
 import com.github.clans.fab.FloatingActionButton;
-import com.github.clans.fab.FloatingActionMenu;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
@@ -43,9 +41,11 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 
 public class MainActivity extends AppCompatActivity
@@ -61,26 +61,30 @@ public class MainActivity extends AppCompatActivity
     private String mUserId;
     private DatabaseReference mDatabase;
 
-    FloatingActionButton mFAB1,mFAB2,mFAB3;
+    FloatingActionButton mFAB1, mFAB2, mFAB3;
 
     private static final int LOCATION_REQUEST_CODE = 1;
+
+    private static final int PIN_IMAGE_ID = 1;
+    private static final int FIRE_IMAGE_ID = 2;
+    private static final int WARNING_IMAGE_ID = 3;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
 
-        drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
         Log.v("TEST123", "Inside");
@@ -91,39 +95,78 @@ public class MainActivity extends AppCompatActivity
                 (this, Manifest.permission.ACCESS_COARSE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_REQUEST_CODE);
-        }
-        else{
+        } else {
             mapFragment.getMapAsync(this);
         }
 
         mFAB1 = findViewById(R.id.fab_warning);
-        mFAB1.setOnClickListener(new View.OnClickListener(){
+        mFAB1.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view){
-                addMarker("Warning!", R.drawable.ic_menu_sos, 3);
+            public void onClick(View view) {
+                addMarker(mLastLocation.getLatitude(), mLastLocation.getLongitude(),
+                        "Warning!", R.drawable.ic_menu_sos, 3);
             }
         });
 
         mFAB2 = findViewById(R.id.fab_fire);
-        mFAB2.setOnClickListener(new View.OnClickListener(){
+        mFAB2.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view){
-                addMarker("Fire!", R.drawable.ic_fab_fire, 2);
+            public void onClick(View view) {
+                addMarker(mLastLocation.getLatitude(), mLastLocation.getLongitude(),
+                        "Fire!", R.drawable.ic_fab_fire, 2);
             }
         });
 
         mFAB3 = findViewById(R.id.fab_pin);
-        mFAB3.setOnClickListener(new View.OnClickListener(){
+        mFAB3.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view){
-                addMarker("User Pin", R.drawable.ic_fab_pin, 1);
+            public void onClick(View view) {
+                addMarker(mLastLocation.getLatitude(), mLastLocation.getLongitude(),
+                        "User Pin", R.drawable.ic_fab_pin, 1);
             }
         });
 
         mUserId = FirebaseAuth.getInstance().getUid();
         mDatabase = FirebaseDatabase.getInstance().getReference("Pings");
 
+        mDatabase.addValueEventListener(new ValueEventListener() { //attach listener
+
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) { //something changed!
+                for (DataSnapshot pingsSnapshot : dataSnapshot.getChildren()) {
+                    double lng, lat;
+                    String description;
+                    String imageId;
+
+                    lat = (double) pingsSnapshot.child("l").child("0").getValue();
+                    lng = (double) pingsSnapshot.child("l").child("1").getValue();
+                    description = (String) pingsSnapshot.child("Description").getValue();
+                    imageId = (String) pingsSnapshot.child("Image").getValue().toString();
+                    switch (Integer.parseInt(imageId)) {
+                        case PIN_IMAGE_ID: {
+                            addMarkerFromDB(lat, lng, description, R.drawable.ic_fab_pin);
+                            break;
+                        }
+                        case FIRE_IMAGE_ID: {
+                            addMarkerFromDB(lat, lng, description, R.drawable.ic_fab_fire);
+                            break;
+                        }
+                        case WARNING_IMAGE_ID: {
+                            addMarkerFromDB(lat, lng, description, R.drawable.ic_menu_sos);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) { //update UI here if error occurred.
+
+            }
+        });
+
     }
+
     public static BitmapDescriptor generateBitmapDescriptorFromRes(
             Context context, int resId) {
         Drawable drawable = ContextCompat.getDrawable(context, resId);
@@ -141,20 +184,29 @@ public class MainActivity extends AppCompatActivity
         return BitmapDescriptorFactory.fromBitmap(bitmap);
     }
 
-    public void addMarker(String message, int image, int imageId){
-        BitmapDescriptor bmp = generateBitmapDescriptorFromRes(this,image);
-        LatLng userLocation = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
+    public void addMarkerFromDB(double latitude, double longitude, String message, int image) {
+        BitmapDescriptor bmp = generateBitmapDescriptorFromRes(this, image);
+        LatLng userLocation = new LatLng(latitude, longitude);
         mMap.addMarker(new MarkerOptions()
                 .position(userLocation)
                 .title(message)
                 .icon(bmp));
-        addMarkerToDatabase(imageId, "");
     }
 
-    public void addMarkerToDatabase(int imageId, String description){
+    public void addMarker(double latitude, double longitude, String message, int image, int imageId) {
+        BitmapDescriptor bmp = generateBitmapDescriptorFromRes(this, image);
+        LatLng userLocation = new LatLng(latitude, longitude);
+        mMap.addMarker(new MarkerOptions()
+                .position(userLocation)
+                .title(message)
+                .icon(bmp));
+        addMarkerToDatabase(imageId, message);
+    }
+
+    public void addMarkerToDatabase(int imageId, String description) {
         GeoFire geoFire = new GeoFire(mDatabase);
-        geoFire.setLocation(mUserId, new GeoLocation(mLastLocation.getLatitude(), mLastLocation.getLongitude()),new
-                GeoFire.CompletionListener(){
+        geoFire.setLocation(mUserId, new GeoLocation(mLastLocation.getLatitude(), mLastLocation.getLongitude()), new
+                GeoFire.CompletionListener() {
                     @Override
                     public void onComplete(String key, DatabaseError error) {
                         //Do some stuff if you want to
@@ -163,6 +215,7 @@ public class MainActivity extends AppCompatActivity
         mDatabase.child(mUserId).child("Description").setValue(description);
         mDatabase.child(mUserId).child("Image").setValue(imageId);
     }
+
     @Override
     public void onMapReady(GoogleMap googleMap) {
         Log.v("TEST123", "OnMapReady");
@@ -180,7 +233,7 @@ public class MainActivity extends AppCompatActivity
         mMap.setMyLocationEnabled(true);
     }
 
-    protected synchronized void buildGoogleApiClient(){
+    protected synchronized void buildGoogleApiClient() {
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
@@ -197,6 +250,7 @@ public class MainActivity extends AppCompatActivity
 
         mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
     }
+
     //When map is ready to start working
     @Override
     public void onConnected(@Nullable Bundle bundle) {
@@ -228,13 +282,12 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        switch (requestCode){
-            case LOCATION_REQUEST_CODE:{
-                if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+        switch (requestCode) {
+            case LOCATION_REQUEST_CODE: {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     mapFragment.getMapAsync(this);
                     Log.v("TEST123", "Permission Granted");
-                }
-                else{
+                } else {
                     Toast.makeText(this, "Please provide location permission", Toast.LENGTH_LONG).show();
                 }
                 break;
@@ -245,7 +298,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onBackPressed() {
-        drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer = findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
@@ -259,6 +312,7 @@ public class MainActivity extends AppCompatActivity
         getMenuInflater().inflate(R.menu.main, menu);
         return true;
     }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
