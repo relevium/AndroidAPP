@@ -26,6 +26,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
+import com.firebase.geofire.GeoFire;
+import com.firebase.geofire.GeoLocation;
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
 import com.google.android.gms.common.ConnectionResult;
@@ -40,6 +42,10 @@ import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 
 public class MainActivity extends AppCompatActivity
@@ -52,6 +58,8 @@ public class MainActivity extends AppCompatActivity
     private LocationRequest mLocationRequest;
     private SupportMapFragment mapFragment;
 
+    private String mUserId;
+    private DatabaseReference mDatabase;
 
     FloatingActionButton mFAB1,mFAB2,mFAB3;
 
@@ -92,7 +100,7 @@ public class MainActivity extends AppCompatActivity
         mFAB1.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view){
-                addMarker("Warning!", R.drawable.ic_menu_sos);
+                addMarker("Warning!", R.drawable.ic_menu_sos, 3);
             }
         });
 
@@ -100,7 +108,7 @@ public class MainActivity extends AppCompatActivity
         mFAB2.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view){
-                addMarker("Fire!", R.drawable.ic_fab_fire);
+                addMarker("Fire!", R.drawable.ic_fab_fire, 2);
             }
         });
 
@@ -108,9 +116,12 @@ public class MainActivity extends AppCompatActivity
         mFAB3.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view){
-                addMarker("User Pin", R.drawable.ic_fab_pin);
+                addMarker("User Pin", R.drawable.ic_fab_pin, 1);
             }
         });
+
+        mUserId = FirebaseAuth.getInstance().getUid();
+        mDatabase = FirebaseDatabase.getInstance().getReference("Pings");
 
     }
     public static BitmapDescriptor generateBitmapDescriptorFromRes(
@@ -130,13 +141,27 @@ public class MainActivity extends AppCompatActivity
         return BitmapDescriptorFactory.fromBitmap(bitmap);
     }
 
-    public void addMarker(String message, int image){
-        Bitmap bmp = BitmapFactory.decodeResource(getResources(), image);
+    public void addMarker(String message, int image, int imageId){
+        BitmapDescriptor bmp = generateBitmapDescriptorFromRes(this,image);
         LatLng userLocation = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
         mMap.addMarker(new MarkerOptions()
                 .position(userLocation)
                 .title(message)
-                .icon(generateBitmapDescriptorFromRes(this,image)));
+                .icon(bmp));
+        addMarkerToDatabase(imageId, "");
+    }
+
+    public void addMarkerToDatabase(int imageId, String description){
+        GeoFire geoFire = new GeoFire(mDatabase);
+        geoFire.setLocation(mUserId, new GeoLocation(mLastLocation.getLatitude(), mLastLocation.getLongitude()),new
+                GeoFire.CompletionListener(){
+                    @Override
+                    public void onComplete(String key, DatabaseError error) {
+                        //Do some stuff if you want to
+                    }
+                });
+        mDatabase.child(mUserId).child("Description").setValue(description);
+        mDatabase.child(mUserId).child("Image").setValue(imageId);
     }
     @Override
     public void onMapReady(GoogleMap googleMap) {
