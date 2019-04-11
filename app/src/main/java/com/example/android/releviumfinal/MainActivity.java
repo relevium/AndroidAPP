@@ -41,8 +41,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import java.util.UUID;
-
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener {
@@ -130,28 +128,31 @@ public class MainActivity extends AppCompatActivity
         });
 
         mNotificationManager = NotificationManagerCompat.from(this);
-
-
-        mDatabase = FirebaseDatabase.getInstance().getReference("Pings");
+        mDatabase = FirebaseDatabase.getInstance().getReference("Ping Details");
 
         pingListener = mDatabase.addChildEventListener(new ChildEventListener() { //attach listener
 
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, String prevChildKey) { //something changed!
 
+
                 final String description;
                 final String imageId;
+                final String uuid = dataSnapshot.getKey();
+
                 description = (String) dataSnapshot.child("mDescription").getValue();
                 imageId = dataSnapshot.child("mImageId").getValue().toString();
 
-                DatabaseReference ref = FirebaseDatabase.getInstance().getReference("GeoFireLocation");
+                DatabaseReference pingLocation = FirebaseDatabase
+                        .getInstance()
+                        .getReference("GeoFireLocations");
 
-                ValueEventListener geoFireListener = ref.addValueEventListener(new ValueEventListener() {
+                pingLocation.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                         double lng, lat;
-                        lat = (double) dataSnapshot.child("l").child("0").getValue();
-                        lng = (double) dataSnapshot.child("l").child("1").getValue();
+                        lat = (double) dataSnapshot.child(uuid).child("l").child("0").getValue();
+                        lng = (double) dataSnapshot.child(uuid).child("l").child("1").getValue();
                         switch (Integer.parseInt(imageId)) {
                             case PIN_IMAGE_ID: {
                                 mapController.addMarkerFromDB(lat, lng, description, R.drawable.ic_fab_pin
@@ -179,6 +180,7 @@ public class MainActivity extends AppCompatActivity
 
                     }
                 });
+
 
             }
 
