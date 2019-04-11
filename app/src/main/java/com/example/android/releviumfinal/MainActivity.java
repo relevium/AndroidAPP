@@ -2,12 +2,8 @@ package com.example.android.releviumfinal;
 
 import android.Manifest;
 import android.app.Notification;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -16,7 +12,6 @@ import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -28,8 +23,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
-import com.firebase.geofire.GeoFire;
-import com.firebase.geofire.GeoLocation;
 import com.github.clans.fab.FloatingActionButton;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -39,11 +32,9 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptor;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -56,17 +47,18 @@ import java.util.UUID;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener {
 
-    protected DrawerLayout drawer;
-    protected GoogleMap mMap;
-    protected GoogleApiClient mGoogleApiClient;
-    protected Location mLastLocation;
-    protected LocationRequest mLocationRequest;
-    protected SupportMapFragment mapFragment;
-    protected NotificationManagerCompat mNotificationManager;
-    protected ValueEventListener pingListener;
+    private DrawerLayout drawer;
+    private GoogleMap mMap;
+    private GoogleApiClient mGoogleApiClient;
+    private Location mLastLocation;
+    private LocationRequest mLocationRequest;
+    private SupportMapFragment mapFragment;
+    private NotificationManagerCompat mNotificationManager;
+    private ChildEventListener pingListener;
 
-    protected String mUserId;
-    protected DatabaseReference mDatabase;
+    private MapController mapController;
+
+    private DatabaseReference mDatabase;
 
     FloatingActionButton mFAB1, mFAB2, mFAB3;
 
@@ -105,12 +97,15 @@ public class MainActivity extends AppCompatActivity
             mapFragment.getMapAsync(this);
         }
 
+        mapController = new MapController(FirebaseAuth.getInstance().getUid());
+
         mFAB1 = findViewById(R.id.fab_warning);
         mFAB1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                addMarker(mLastLocation.getLatitude(), mLastLocation.getLongitude(),
-                        "Warning!", R.drawable.ic_menu_sos, WARNING_IMAGE_ID);
+                mapController.addMarker(mLastLocation.getLatitude(), mLastLocation.getLongitude(),
+                        "Warning!", R.drawable.ic_menu_sos, WARNING_IMAGE_ID,
+                        MainActivity.this, mMap);
             }
         });
 
@@ -118,8 +113,9 @@ public class MainActivity extends AppCompatActivity
         mFAB2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                addMarker(mLastLocation.getLatitude(), mLastLocation.getLongitude(),
-                        "Fire!", R.drawable.ic_fab_fire, FIRE_IMAGE_ID);
+                mapController.addMarker(mLastLocation.getLatitude(), mLastLocation.getLongitude(),
+                        "Fire!", R.drawable.ic_fab_fire, FIRE_IMAGE_ID,
+                        MainActivity.this, mMap);
             }
         });
 
@@ -127,120 +123,89 @@ public class MainActivity extends AppCompatActivity
         mFAB3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                addMarker(mLastLocation.getLatitude(), mLastLocation.getLongitude(),
-                        "User Pin", R.drawable.ic_fab_pin, PIN_IMAGE_ID);
+                mapController.addMarker(mLastLocation.getLatitude(), mLastLocation.getLongitude(),
+                        "User Pin", R.drawable.ic_fab_pin, PIN_IMAGE_ID,
+                        MainActivity.this, mMap);
             }
         });
 
         mNotificationManager = NotificationManagerCompat.from(this);
 
-        mUserId = FirebaseAuth.getInstance().getUid();
+
         mDatabase = FirebaseDatabase.getInstance().getReference("Pings");
 
-        pingListener = mDatabase.addValueEventListener(new ValueEventListener() { //attach listener
+        pingListener = mDatabase.addChildEventListener(new ChildEventListener() { //attach listener
 
             @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) { //something changed!
-                for (DataSnapshot pingsSnapshot : dataSnapshot.getChildren()) {
-                    double lng, lat;
-                    String description;
-                    String imageId;
+            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, String prevChildKey) { //something changed!
 
-                    lat = (double) pingsSnapshot.child("GeoFireLocation").child("l").child("0").getValue();
-                    lng = (double) pingsSnapshot.child("GeoFireLocation").child("l").child("1").getValue();
-                    description = (String) pingsSnapshot.child("Description").getValue();
-                    imageId = pingsSnapshot.child("Image").getValue().toString();
-                    switch (Integer.parseInt(imageId)) {
-                        case PIN_IMAGE_ID: {
-                            addMarkerFromDB(lat, lng, description, R.drawable.ic_fab_pin);
-                            sendNotificationDisasterChannel(R.drawable.ic_fab_pin, description);
-                            break;
-                        }
-                        case FIRE_IMAGE_ID: {
-                            addMarkerFromDB(lat, lng, description, R.drawable.ic_fab_fire);
-                            sendNotificationDisasterChannel(R.drawable.ic_fab_fire, description);
-                            break;
-                        }
-                        case WARNING_IMAGE_ID: {
-                            addMarkerFromDB(lat, lng, description, R.drawable.ic_menu_sos);
-                            sendNotificationDisasterChannel(R.drawable.ic_menu_sos, description);
-                            break;
+                final String description;
+                final String imageId;
+                description = (String) dataSnapshot.child("mDescription").getValue();
+                imageId = dataSnapshot.child("mImageId").getValue().toString();
+
+                DatabaseReference ref = FirebaseDatabase.getInstance().getReference("GeoFireLocation");
+
+                ValueEventListener geoFireListener = ref.addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        double lng, lat;
+                        lat = (double) dataSnapshot.child("l").child("0").getValue();
+                        lng = (double) dataSnapshot.child("l").child("1").getValue();
+                        switch (Integer.parseInt(imageId)) {
+                            case PIN_IMAGE_ID: {
+                                mapController.addMarkerFromDB(lat, lng, description, R.drawable.ic_fab_pin
+                                        , MainActivity.this, mMap);
+                                sendNotificationDisasterChannel(R.drawable.ic_fab_pin, description);
+                                break;
+                            }
+                            case FIRE_IMAGE_ID: {
+                                mapController.addMarkerFromDB(lat, lng, description, R.drawable.ic_fab_fire,
+                                        MainActivity.this, mMap);
+                                sendNotificationDisasterChannel(R.drawable.ic_fab_fire, description);
+                                break;
+                            }
+                            case WARNING_IMAGE_ID: {
+                                mapController.addMarkerFromDB(lat, lng, description, R.drawable.ic_menu_sos,
+                                        MainActivity.this, mMap);
+                                sendNotificationDisasterChannel(R.drawable.ic_menu_sos, description);
+                                break;
+                            }
                         }
                     }
 
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) { //update UI here if error occurred.
-
-            }
-        });
-        mDatabase.addValueEventListener(pingListener);
-
-    }
-
-    public void addMarker(double latitude, double longitude, String message, int image, int imageId) {
-        BitmapDescriptor bmp = generateBitmapDescriptorFromRes(this, image);
-
-        LatLng userLocation = new LatLng(latitude, longitude);
-        mMap.addMarker(new MarkerOptions()
-                .position(userLocation)
-                .title(message)
-                .icon(bmp));
-
-        addMarkerToDatabase(imageId, message);
-    }
-
-    public void addMarkerToDatabase(int imageId, String description) {
-        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("Pings");
-
-        String uuid = UUID.randomUUID().toString();
-        //Ping unique ID
-        ref.setValue(uuid);
-        //User's unique ID
-        ref.child(uuid).child("UserId").setValue(mUserId);
-        System.out.println(mUserId);
-
-        GeoFire geoFire = new GeoFire(ref.child(uuid));
-        geoFire.setLocation("GeoFireLocation", new GeoLocation(mLastLocation.getLatitude(), mLastLocation.getLongitude()), new
-                GeoFire.CompletionListener() {
                     @Override
-                    public void onComplete(String key, DatabaseError error) {
-                        //Do some stuff if you want to
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
                     }
                 });
-        ref.child(uuid).child("Description").setValue(description);
-        ref.child(uuid).child("Image").setValue(imageId);
-        ref.onDisconnect();
-    }
 
-    public static BitmapDescriptor generateBitmapDescriptorFromRes(
-            Context context, int resId) {
-        Drawable drawable = ContextCompat.getDrawable(context, resId);
-        drawable.setBounds(
-                0,
-                0,
-                drawable.getIntrinsicWidth(),
-                drawable.getIntrinsicHeight());
-        Bitmap bitmap = Bitmap.createBitmap(
-                drawable.getIntrinsicWidth(),
-                drawable.getIntrinsicHeight(),
-                Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(bitmap);
-        drawable.draw(canvas);
-        return BitmapDescriptorFactory.fromBitmap(bitmap);
-    }
+            }
 
-    public void addMarkerFromDB(double latitude, double longitude, String message, int image) {
-        BitmapDescriptor bmp = generateBitmapDescriptorFromRes(this, image);
-        LatLng userLocation = new LatLng(latitude, longitude);
-        mMap.addMarker(new MarkerOptions()
-                .position(userLocation)
-                .title(message)
-                .icon(bmp));
-    }
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
 
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+
+        });
+        mDatabase.addChildEventListener(pingListener);
+
+    }
 
     public void sendNotificationDisasterChannel(int icon, String message) {
         Notification notification = new NotificationCompat.Builder(this, ApplicationController.CHANNEL_1_ID)
