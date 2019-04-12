@@ -42,7 +42,7 @@ public class MapController extends MainActivity {
     }
 
     public void addMarkerToDatabase(int imageId, String description, LatLng mLastLocation) {
-        DatabaseReference pingDetailsRef = FirebaseDatabase.getInstance().getReference("Ping Details").push();
+        DatabaseReference pingDetailsRef = FirebaseDatabase.getInstance().getReference("Ping-Details").push();
 
         Pings ping = new Pings();
         ping.setmDescription(description);
@@ -57,9 +57,22 @@ public class MapController extends MainActivity {
             }
         });
 
-        DatabaseReference geoFireLocations = FirebaseDatabase.getInstance().getReference("GeoFireLocations");
+        DatabaseReference geoFireLocations = FirebaseDatabase.getInstance().getReference("GeoFirePingLocations");
         GeoFire geoFire = new GeoFire(geoFireLocations);
         geoFire.setLocation(pingDetailsRef.getKey(), new GeoLocation(mLastLocation.latitude, mLastLocation.longitude), new
+                GeoFire.CompletionListener() {
+                    @Override
+                    public void onComplete(String key, DatabaseError error) {
+                        //Do some stuff if you want to
+                    }
+                });
+    }
+
+    public void trackUserLocation(LatLng mLastLocation) {
+
+        DatabaseReference geoFireLocations = FirebaseDatabase.getInstance().getReference("User-Location");
+        GeoFire geoFire = new GeoFire(geoFireLocations);
+        geoFire.setLocation(mUserId, new GeoLocation(mLastLocation.latitude, mLastLocation.longitude), new
                 GeoFire.CompletionListener() {
                     @Override
                     public void onComplete(String key, DatabaseError error) {

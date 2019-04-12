@@ -225,7 +225,6 @@ public class MainActivity extends AppCompatActivity
         Log.v("TEST123", "OnMapReady");
         mMap = googleMap;
         mMap.getUiSettings().setZoomControlsEnabled(true);
-        mMap.getUiSettings().setZoomControlsEnabled(false);
         mMap.animateCamera(CameraUpdateFactory.zoomTo(11));
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission
@@ -253,6 +252,7 @@ public class MainActivity extends AppCompatActivity
         LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
 
         mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+        mapController.trackUserLocation(latLng);
     }
 
     //When map is ready to start working

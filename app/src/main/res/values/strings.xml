@@ -24,4 +24,6 @@
     <string name="action_settings">Settings</string>
     <string name="access_token" translatable="false">pk.eyJ1IjoibW9oYW1lZDY2NjMiLCJhIjoiY2p1NGJ4OGoxMHRmazQ0bzE5Mng0NXpseSJ9.HVTu0BfhvTTSv4woLCorJA</string>
     <string name="title_activity_maps">Map</string>
+    <string name="default_notification_channel_id">Disaster alert</string>
+    <string name="default_notification_tittle">New Alert nearby !</string>
 </resources>
