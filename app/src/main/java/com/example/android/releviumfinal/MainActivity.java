@@ -1,8 +1,10 @@
 package com.example.android.releviumfinal;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.Notification;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
@@ -25,9 +27,14 @@ import android.widget.Toast;
 
 import com.github.clans.fab.FloatingActionButton;
 import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResponse;
+import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -104,9 +111,7 @@ public class MainActivity extends AppCompatActivity
         mFAB1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mapController.addMarker(mLastLocation.getLatitude(), mLastLocation.getLongitude(),
-                        "Warning!", R.drawable.ic_menu_sos, WARNING_IMAGE_ID,
-                        MainActivity.this, mMap);
+                addMarkerOnMap("Warning!", R.drawable.ic_menu_sos, WARNING_IMAGE_ID);
             }
         });
 
@@ -114,9 +119,7 @@ public class MainActivity extends AppCompatActivity
         mFAB2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mapController.addMarker(mLastLocation.getLatitude(), mLastLocation.getLongitude(),
-                        "Fire!", R.drawable.ic_fab_fire, FIRE_IMAGE_ID,
-                        MainActivity.this, mMap);
+                addMarkerOnMap("Fire", R.drawable.ic_fab_fire, FIRE_IMAGE_ID);
             }
         });
 
@@ -124,9 +127,8 @@ public class MainActivity extends AppCompatActivity
         mFAB3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mapController.addMarker(mLastLocation.getLatitude(), mLastLocation.getLongitude(),
-                        "User Pin", R.drawable.ic_fab_pin, PIN_IMAGE_ID,
-                        MainActivity.this, mMap);
+                addMarkerOnMap("User Ping", R.drawable.ic_fab_pin, PIN_IMAGE_ID);
+
             }
         });
 
@@ -160,19 +162,19 @@ public class MainActivity extends AppCompatActivity
                             case PIN_IMAGE_ID: {
                                 mapController.addMarkerFromDB(lat, lng, description, R.drawable.ic_fab_pin
                                         , MainActivity.this, mMap);
-                                sendNotificationDisasterChannel(R.drawable.ic_fab_pin, description);
+                                //sendNotificationDisasterChannel(R.drawable.ic_fab_pin, description);
                                 break;
                             }
                             case FIRE_IMAGE_ID: {
                                 mapController.addMarkerFromDB(lat, lng, description, R.drawable.ic_fab_fire,
                                         MainActivity.this, mMap);
-                                sendNotificationDisasterChannel(R.drawable.ic_fab_fire, description);
+                                //sendNotificationDisasterChannel(R.drawable.ic_fab_fire, description);
                                 break;
                             }
                             case WARNING_IMAGE_ID: {
                                 mapController.addMarkerFromDB(lat, lng, description, R.drawable.ic_menu_sos,
                                         MainActivity.this, mMap);
-                                sendNotificationDisasterChannel(R.drawable.ic_menu_sos, description);
+                                //sendNotificationDisasterChannel(R.drawable.ic_menu_sos, description);
                                 break;
                             }
                         }
@@ -228,6 +230,19 @@ public class MainActivity extends AppCompatActivity
 
     }
 
+    public void addMarkerOnMap(String msg, int icon, int imageID){
+        if(mLastLocation != null) {
+            mapController.addMarker(mLastLocation.getLatitude(), mLastLocation.getLongitude(),
+                    msg, icon, imageID,
+                    MainActivity.this, mMap);
+        }
+        else{
+            Toast.makeText(MainActivity.this, "Please Turn on GPS", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+
+
     public void sendNotificationDisasterChannel(int icon, String message) {
         Notification notification = new NotificationCompat.Builder(this, ApplicationController.CHANNEL_1_ID)
                 .setSmallIcon(icon)
@@ -281,6 +296,50 @@ public class MainActivity extends AppCompatActivity
         mLocationRequest.setInterval(10000);
         mLocationRequest.setFastestInterval(10000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
+                .addLocationRequest(mLocationRequest);
+        Task<LocationSettingsResponse> result =
+                LocationServices.getSettingsClient(MainActivity.this).checkLocationSettings(builder.build());
+
+
+
+        result.addOnCompleteListener(new OnCompleteListener<LocationSettingsResponse>() {
+            @Override
+            public void onComplete(@NonNull Task<LocationSettingsResponse> task) {
+                try {
+                    LocationSettingsResponse response = task.getResult(ApiException.class);
+                    // All location settings are satisfied. The client can initialize location
+                    // requests here.
+                } catch (ApiException exception) {
+                    switch (exception.getStatusCode()) {
+                        case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                            // Location settings are not satisfied. But could be fixed by showing the
+                            // user a dialog.
+                            try {
+                                // Cast to a resolvable exception.
+                                ResolvableApiException resolvable = (ResolvableApiException) exception;
+                                // Show the dialog by calling startResolutionForResult(),
+                                // and check the result in onActivityResult().
+                                startIntentSenderForResult(
+                                        resolvable.getResolution().getIntentSender(),
+                                        LocationRequest.PRIORITY_HIGH_ACCURACY, null,
+                                        0, 0, 0, null);
+                            } catch (IntentSender.SendIntentException e) {
+                                // Ignore the error.
+                            } catch (ClassCastException e) {
+                                // Ignore, should be an impossible error.
+                            }
+                            break;
+                        case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                            // Location settings are not satisfied. However, we have no way to fix the
+                            // settings so we won't show the dialog.
+                            break;
+                    }
+                }
+            }
+        });
+
         mMap.animateCamera(CameraUpdateFactory.zoomTo(11));
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
@@ -290,6 +349,26 @@ public class MainActivity extends AppCompatActivity
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_REQUEST_CODE);
         }
         LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case LocationRequest.PRIORITY_HIGH_ACCURACY:
+                switch (resultCode) {
+                    case Activity.RESULT_OK:
+                        // All required changes were successfully made
+                        Log.v("GPS", "onActivityResult: GPS Enabled by user");
+                        break;
+                    case Activity.RESULT_CANCELED:
+                        // The user was asked to change settings, but chose not to
+                        Log.v("GPS", "onActivityResult: User rejected GPS request");
+                        break;
+                    default:
+                        break;
+                }
+                break;
+        }
     }
 
     @Override
