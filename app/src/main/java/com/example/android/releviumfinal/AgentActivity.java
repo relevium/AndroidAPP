@@ -6,13 +6,14 @@ import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import org.json.JSONException;
@@ -23,7 +24,11 @@ import java.io.DataOutputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.DateFormat;
 import java.util.ArrayList;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.List;
 import java.util.Locale;
 
 public class AgentActivity extends AppCompatActivity {
@@ -31,10 +36,14 @@ public class AgentActivity extends AppCompatActivity {
     EditText mSendText;
     ImageView mImageSendText;
     ImageView mImageSendVoice;
-    TextView test1;
-    TextView test2;
     StringBuilder sb = new StringBuilder();
     TextToSpeech mTextToSpeech;
+
+    private final List<Messages> messagesList = new ArrayList<>();
+    private LinearLayoutManager linearLayoutManager;
+    private MessageAdapter messageAdapter;
+    private RecyclerView userMessagesList;
+
     static final int VOICE_RECOGNITION_REQUEST_CODE = 1234;
 
     @Override
@@ -44,8 +53,12 @@ public class AgentActivity extends AppCompatActivity {
         mSendText = findViewById(R.id.agent_editText);
         mImageSendText = findViewById(R.id.agent_btn_text);
         mImageSendVoice = findViewById(R.id.agent_btn_voice);
-        test1 = findViewById(R.id.text1);
-        test2 = findViewById(R.id.text2);
+
+        messageAdapter = new MessageAdapter(messagesList);
+        userMessagesList = findViewById(R.id.private_messages_list_of_users);
+        linearLayoutManager = new LinearLayoutManager(this);
+        userMessagesList.setLayoutManager(linearLayoutManager);
+        userMessagesList.setAdapter(messageAdapter);
 
         mTextToSpeech = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
             @Override
@@ -153,7 +166,19 @@ public class AgentActivity extends AppCompatActivity {
                             @Override
                             public void run() {
                                 try {
-                                    test1.setText(question);
+                                    Calendar calendar = Calendar.getInstance();
+
+                                    DateFormat currentDate = SimpleDateFormat.getDateInstance();
+                                    String saveCurrentDate = currentDate.format(calendar.getTime());
+
+                                    DateFormat currentTime = SimpleDateFormat.getTimeInstance();
+                                    String saveCurrentTime = currentTime.format(calendar.getTime());
+
+                                    Messages userQuery = new Messages("user", question,saveCurrentTime , saveCurrentDate);
+
+                                    messagesList.add(userQuery);
+                                    messageAdapter.notifyDataSetChanged();
+
                                     readJsonFile(sb.toString());
                                 } catch (JSONException e) {
                                     e.printStackTrace();
@@ -173,7 +198,20 @@ public class AgentActivity extends AppCompatActivity {
     public void readJsonFile(String result) throws JSONException {
         JSONObject jObject = new JSONObject(result);
         String aJsonAnswer = jObject.getString("question");
-        test2.setText(aJsonAnswer);
+
+        Calendar calendar = Calendar.getInstance();
+
+        DateFormat currentDate = SimpleDateFormat.getDateInstance();
+        String saveCurrentDate = currentDate.format(calendar.getTime());
+
+        DateFormat currentTime = SimpleDateFormat.getTimeInstance();
+        String saveCurrentTime = currentTime.format(calendar.getTime());
+
+        Messages agentAnswer = new Messages("agent", aJsonAnswer, saveCurrentDate, saveCurrentTime);
+        messagesList.add(agentAnswer);
+        messageAdapter.notifyDataSetChanged();
+        userMessagesList.smoothScrollToPosition(userMessagesList.getAdapter().getItemCount());
+
         mTextToSpeech.speak(aJsonAnswer, TextToSpeech.QUEUE_FLUSH, null, null);
         sb = new StringBuilder();
     }

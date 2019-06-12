@@ -1,37 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <TextView
-        android:layout_margin="10dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="test1"
-        android:layout_alignParentLeft="true"
-        android:id="@+id/text1"
-        android:textSize="20dp"/>
-    <TextView
-        android:layout_margin="10dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="test2"
-        android:id="@+id/text2"
-        android:layout_alignParentRight="true"
-        android:layout_below="@id/text1"
-        android:textSize="20dp"/>
+    <android.support.v7.widget.RecyclerView
+        android:layout_weight="1"
+        android:layout_marginBottom="10dp"
+        android:id="@+id/private_messages_list_of_users"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+    </android.support.v7.widget.RecyclerView>
 
 
     <LinearLayout
-        android:padding="10dp"
-        android:gravity="center"
-        android:orientation="horizontal"
+        android:layout_weight="13"
+        android:layout_below="@id/private_messages_list_of_users"
+        android:id="@+id/chat_linear_layout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true">
+        android:layout_height="match_parent"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentBottom="true"
+        android:background="@android:color/background_light"
+        android:orientation="horizontal"
+        >
 
         <EditText
             android:background="@drawable/rounded_corners"
@@ -47,6 +39,7 @@
             android:layout_width="45dp"
             android:layout_height="45dp"
             android:layout_weight="1"
+            android:layout_alignParentEnd="true"
             android:layout_gravity="center"
             android:foregroundGravity="center">
             <ImageView
@@ -71,4 +64,4 @@
 
 
     </LinearLayout>
-</RelativeLayout>
+</LinearLayout>

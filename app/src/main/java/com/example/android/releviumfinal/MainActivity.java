@@ -3,7 +3,6 @@ package com.example.android.releviumfinal;
 import android.Manifest;
 import android.app.Notification;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
