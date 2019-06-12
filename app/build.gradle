@@ -33,8 +33,8 @@ dependencies {
     implementation 'com.android.support:support-v4:28.0.0'
     implementation 'android.arch.work:work-runtime:1.0.1'
     //googleMaps
-    implementation 'com.google.android.gms:play-services-maps:15.0.1'
-    implementation 'com.google.android.gms:play-services-location:15.0.1'
+    implementation 'com.google.android.gms:play-services-maps:16.1.0'
+    implementation 'com.google.android.gms:play-services-location:16.0.0'
     //firebase
     implementation 'com.google.firebase:firebase-core:16.0.8'
     implementation 'com.google.firebase:firebase-auth:16.2.1'

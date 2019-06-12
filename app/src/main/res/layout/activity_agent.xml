@@ -6,11 +6,24 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <ListView
-        android:background="#f1f1f1"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-    </ListView>
+    <TextView
+        android:layout_margin="10dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="test1"
+        android:layout_alignParentLeft="true"
+        android:id="@+id/text1"
+        android:textSize="20dp"/>
+    <TextView
+        android:layout_margin="10dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="test2"
+        android:id="@+id/text2"
+        android:layout_alignParentRight="true"
+        android:layout_below="@id/text1"
+        android:textSize="20dp"/>
+
 
     <LinearLayout
         android:padding="10dp"
@@ -24,21 +37,38 @@
             android:background="@drawable/rounded_corners"
             android:paddingBottom="3dp"
             android:layout_weight="4"
-            android:id="@+id/agent_send_text"
+            android:id="@+id/agent_editText"
             android:layout_marginRight="10dp"
             android:layout_width="match_parent"
             android:layout_height="45dp"
             android:hint="Write text..." />
 
-        <ImageView
+        <RelativeLayout
+            android:layout_width="45dp"
+            android:layout_height="45dp"
             android:layout_weight="1"
             android:layout_gravity="center"
-            android:foregroundGravity="center"
-            android:id="@+id/agent_send_icon"
-            android:padding="13dp"
-            android:background="@drawable/ic_mic"
-            android:layout_width="45dp"
-            android:layout_height="45dp"/>
+            android:foregroundGravity="center">
+            <ImageView
+                android:contentDescription="mic icon"
+                android:visibility="visible"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/agent_btn_voice"
+                android:padding="13dp"
+                android:background="@drawable/ic_mic"
+            />
+            <ImageView
+                android:contentDescription="send icon"
+                android:visibility="invisible"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/agent_btn_text"
+                android:padding="13dp"
+                android:background="@drawable/ic_send"
+                />
+        </RelativeLayout>
+
 
     </LinearLayout>
 </RelativeLayout>

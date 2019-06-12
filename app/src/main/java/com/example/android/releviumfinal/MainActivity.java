@@ -3,6 +3,7 @@ package com.example.android.releviumfinal;
 import android.Manifest;
 import android.app.Notification;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
@@ -33,6 +34,8 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
@@ -40,7 +43,8 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.InstanceIdResult;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener {
@@ -128,7 +132,7 @@ public class MainActivity extends AppCompatActivity
         });
 
         mNotificationManager = NotificationManagerCompat.from(this);
-        mDatabase = FirebaseDatabase.getInstance().getReference("Ping Details");
+        mDatabase = FirebaseDatabase.getInstance().getReference("Ping-Details");
 
         pingListener = mDatabase.addChildEventListener(new ChildEventListener() { //attach listener
 
@@ -145,7 +149,7 @@ public class MainActivity extends AppCompatActivity
 
                 DatabaseReference pingLocation = FirebaseDatabase
                         .getInstance()
-                        .getReference("GeoFireLocations");
+                        .getReference("GeoFirePingLocations");
 
                 pingLocation.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
@@ -180,6 +184,22 @@ public class MainActivity extends AppCompatActivity
 
                     }
                 });
+
+
+                FirebaseInstanceId.getInstance().getInstanceId()
+                        .addOnCompleteListener(new OnCompleteListener<InstanceIdResult>() {
+                            @Override
+                            public void onComplete(@NonNull Task<InstanceIdResult> task) {
+                                if (!task.isSuccessful()) {
+                                    Log.w("FCM token failed", "getInstanceId failed", task.getException());
+                                    return;
+                                }
+                                String token = task.getResult().getToken();
+                                DatabaseReference fcmDatabase = FirebaseDatabase.getInstance()
+                                        .getReference("FCM-ID").child(FirebaseAuth.getInstance().getUid());
+                                fcmDatabase.setValue(token);
+                            }
+                        });
 
 
             }
