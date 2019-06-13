@@ -9,6 +9,8 @@ public class ChatActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
+        String message = getIntent().getStringExtra("tittle");
+        setTitle(message);
 
     }
 }

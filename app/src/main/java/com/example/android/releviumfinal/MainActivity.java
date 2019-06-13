@@ -39,10 +39,14 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -63,6 +67,12 @@ public class MainActivity extends AppCompatActivity
     private SupportMapFragment mapFragment;
     private NotificationManagerCompat mNotificationManager;
     private ChildEventListener pingListener;
+    private String mUserFirstName;
+    private String mUserLastName;
+    private String mUserUID;
+    private FirebaseUser mUser;
+    private FirebaseAuth mUserAuth;
+    private Marker mUserMarker;
 
     private MapController mapController;
 
@@ -106,6 +116,21 @@ public class MainActivity extends AppCompatActivity
         }
 
         mapController = new MapController(FirebaseAuth.getInstance().getUid());
+
+        mUserAuth = FirebaseAuth.getInstance();
+        DatabaseReference userDB = FirebaseDatabase.getInstance().getReference();
+        mUser = mUserAuth.getCurrentUser();
+        mUserUID = mUser.getUid();
+
+        userDB.child("Users").child(mUserUID).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                mUserFirstName = dataSnapshot.child("mFirstName").getValue(String.class);
+                mUserLastName = dataSnapshot.child("mLastName").getValue(String.class);
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {}
+        });
 
         mFAB1 = findViewById(R.id.fab_warning);
         mFAB1.setOnClickListener(new View.OnClickListener() {
@@ -230,17 +255,15 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-    public void addMarkerOnMap(String msg, int icon, int imageID){
-        if(mLastLocation != null) {
+    public void addMarkerOnMap(String msg, int icon, int imageID) {
+        if (mLastLocation != null) {
             mapController.addMarker(mLastLocation.getLatitude(), mLastLocation.getLongitude(),
                     msg, icon, imageID,
                     MainActivity.this, mMap);
-        }
-        else{
+        } else {
             Toast.makeText(MainActivity.this, "Please Turn on GPS", Toast.LENGTH_SHORT).show();
         }
     }
-
 
 
     public void sendNotificationDisasterChannel(int icon, String message) {
@@ -268,6 +291,29 @@ public class MainActivity extends AppCompatActivity
         }
         buildGoogleApiClient();
         mMap.setMyLocationEnabled(true);
+
+        mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(Marker marker) {
+                if(marker.getTag().equals("UserLocationMarker")){
+                    if(marker.equals(mUserMarker)){
+                        Intent chatActivity = new Intent(MainActivity.this, ChatActivity.class);
+                        chatActivity.putExtra("tittle", "Contacted user Name");
+                        startActivity(chatActivity);
+                        marker.showInfoWindow();
+                        return false;
+                    }
+                    else{
+                        Intent chatActivity = new Intent(MainActivity.this, ChatActivity.class);
+                        chatActivity.putExtra("tittle", "Contacted user Name");
+                        startActivity(chatActivity);
+                        return true;
+                    }
+                }
+                return false;
+            }
+        });
+
     }
 
     protected synchronized void buildGoogleApiClient() {
@@ -287,6 +333,17 @@ public class MainActivity extends AppCompatActivity
 
         mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
         mapController.trackUserLocation(latLng);
+        if(mUserMarker != null){
+            mUserMarker.remove();
+        }
+
+        mUserMarker = mMap.addMarker(new MarkerOptions().position(latLng).
+                icon(BitmapDescriptorFactory.fromBitmap(mapController
+                        .createCustomMarker(MainActivity.this, R.drawable.relevium, "Relevium"))));
+        mUserMarker.setTitle(mUserFirstName+" "+mUserLastName);
+        mUserMarker.setTag("UserLocationMarker");
+
+
     }
 
     //When map is ready to start working
@@ -301,7 +358,6 @@ public class MainActivity extends AppCompatActivity
                 .addLocationRequest(mLocationRequest);
         Task<LocationSettingsResponse> result =
                 LocationServices.getSettingsClient(MainActivity.this).checkLocationSettings(builder.build());
-
 
 
         result.addOnCompleteListener(new OnCompleteListener<LocationSettingsResponse>() {
