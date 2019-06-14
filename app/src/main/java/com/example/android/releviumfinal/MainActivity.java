@@ -23,6 +23,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.github.clans.fab.FloatingActionButton;
@@ -61,7 +62,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.Map;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener {
@@ -77,10 +77,12 @@ public class MainActivity extends AppCompatActivity
     private ArrayList<Marker> mForeignUserLocation = new ArrayList<>();
     private String mUserFirstName;
     private String mUserLastName;
-    private String mUserUID;
+    private String mUserUID, mUserEmail;
     private FirebaseUser mUser;
     private FirebaseAuth mUserAuth;
     private Marker mUserMarker;
+
+    TextView mNDUserName, mNDEmail;
 
     private DatabaseReference mRootRef;
 
@@ -112,6 +114,7 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+        View headerView = navigationView.getHeaderView(0);
 
         mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -124,6 +127,9 @@ public class MainActivity extends AppCompatActivity
             mapFragment.getMapAsync(this);
         }
 
+        mNDUserName = headerView.findViewById(R.id.textView_nd_user_name);
+        mNDEmail = headerView.findViewById(R.id.textView_nd_email);
+
         mapController = new MapController(FirebaseAuth.getInstance().getUid());
 
         mUserAuth = FirebaseAuth.getInstance();
@@ -135,6 +141,10 @@ public class MainActivity extends AppCompatActivity
             public void onDataChange(DataSnapshot dataSnapshot) {
                 mUserFirstName = dataSnapshot.child("mFirstName").getValue(String.class);
                 mUserLastName = dataSnapshot.child("mLastName").getValue(String.class);
+                mUserEmail = dataSnapshot.child("mEmail").getValue(String.class);
+                String concatName = (mUserFirstName+" "+mUserLastName);
+                mNDUserName.setText(concatName);
+                mNDEmail.setText(mUserEmail);
             }
 
             @Override
@@ -298,7 +308,7 @@ public class MainActivity extends AppCompatActivity
                             if (!uuid.equals(mUserUID)) {
                                 Marker foreignUserLocation = mMap.addMarker(new MarkerOptions().position(latLng).
                                         icon(BitmapDescriptorFactory.fromBitmap(mapController
-                                                .createCustomMarker(MainActivity.this, R.drawable.relevium, "ForeignerUserLocationIcon"))));
+                                                .createCustomMarker(MainActivity.this, R.drawable.ic_default_profile_pic, "ForeignerUserLocationIcon"))));
                                 foreignUserLocation.setTitle(userFirstName + " " + userLastName);
                                 foreignUserLocation.setSnippet(uuid);
                                 foreignUserLocation.setTag("UserLocationMarker");
@@ -403,7 +413,7 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-    public void sendNotificationDisasterChannel(int icon, String message, String Tittle) {
+    public void sendNotificationChatChannel(int icon, String message, String Tittle) {
         Notification notification = new NotificationCompat.Builder(this, ApplicationController.CHANNEL_1_ID)
                 .setSmallIcon(icon)
                 .setContentTitle(Tittle)
@@ -472,7 +482,7 @@ public class MainActivity extends AppCompatActivity
 
         mUserMarker = mMap.addMarker(new MarkerOptions().position(latLng).
                 icon(BitmapDescriptorFactory.fromBitmap(mapController
-                        .createCustomMarker(MainActivity.this, R.drawable.relevium, "LocalUserLocationIcon"))));
+                        .createCustomMarker(MainActivity.this, R.drawable.ic_default_profile_pic, "LocalUserLocationIcon"))));
         mUserMarker.setTitle(mUserFirstName + " " + mUserLastName);
         mUserMarker.setTag("UserLocationMarker");
 
