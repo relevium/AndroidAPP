@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity
     private Location mLastLocation;
     private LocationRequest mLocationRequest;
     private SupportMapFragment mapFragment;
-    private NotificationManagerCompat mNotificationManager;
+    private NotificationManagerCompat mNotificationManagerPing, mNotificationManagerLocation;
     private ChildEventListener pingListener;
     private String mUserFirstName;
     private String mUserLastName;
@@ -76,7 +76,6 @@ public class MainActivity extends AppCompatActivity
 
     private MapController mapController;
 
-    private DatabaseReference mDatabase;
 
     FloatingActionButton mFAB1, mFAB2, mFAB3;
 
@@ -157,8 +156,8 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        mNotificationManager = NotificationManagerCompat.from(this);
-        mDatabase = FirebaseDatabase.getInstance().getReference("Ping-Details");
+        mNotificationManagerPing = NotificationManagerCompat.from(this);
+        DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference("Ping-Details");
 
         pingListener = mDatabase.addChildEventListener(new ChildEventListener() { //attach listener
 
@@ -253,6 +252,71 @@ public class MainActivity extends AppCompatActivity
         });
         mDatabase.addChildEventListener(pingListener);
 
+        DatabaseReference mUserLocationDataBase = FirebaseDatabase.getInstance().getReference("User-Location");
+
+        pingListener = mUserLocationDataBase.addChildEventListener(new ChildEventListener() { //attach listener
+
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, String prevChildKey) { //something changed!
+
+                final String uuid = dataSnapshot.getKey();
+                final double lat, lng;
+
+                lat = (double) dataSnapshot.child("l").child("0").getValue();
+                lng = (double) dataSnapshot.child("l").child("1").getValue();
+
+                DatabaseReference userInfo = FirebaseDatabase
+                        .getInstance()
+                        .getReference("Users");
+
+                userInfo.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        String userFirstName, userLastName;
+                        userFirstName = (String) dataSnapshot.child(uuid).child("mFirstName").getValue();
+                        userLastName = (String) dataSnapshot.child(uuid).child("mLastName").getValue();
+                        dataSnapshot.child(uuid).child("mImage").getValue();
+
+                        LatLng latLng = new LatLng(lat,lng);
+
+                        Marker foreignUserLocation = mMap.addMarker(new MarkerOptions().position(latLng).
+                                icon(BitmapDescriptorFactory.fromBitmap(mapController
+                                        .createCustomMarker(MainActivity.this, R.drawable.relevium, "ForeignerUserLocationIcon"))));
+                        foreignUserLocation.setTitle(userFirstName+" "+userLastName);
+                        foreignUserLocation.setTag("UserLocationMarker");
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                    }
+                });
+
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+
+        });
+        mUserLocationDataBase.addChildEventListener(pingListener);
+
     }
 
     public void addMarkerOnMap(String msg, int icon, int imageID) {
@@ -274,7 +338,7 @@ public class MainActivity extends AppCompatActivity
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setCategory(NotificationCompat.CATEGORY_ALARM)
                 .build();
-        mNotificationManager.notify(1, notification);
+        mNotificationManagerPing.notify(1, notification);
     }
 
     @Override
@@ -296,16 +360,13 @@ public class MainActivity extends AppCompatActivity
             @Override
             public boolean onMarkerClick(Marker marker) {
                 if(marker.getTag().equals("UserLocationMarker")){
-                    if(marker.equals(mUserMarker)){
-                        Intent chatActivity = new Intent(MainActivity.this, ChatActivity.class);
-                        chatActivity.putExtra("tittle", "Contacted user Name");
-                        startActivity(chatActivity);
+                    if(marker.getTitle().equals(mUserMarker.getTitle())){
                         marker.showInfoWindow();
                         return false;
                     }
                     else{
                         Intent chatActivity = new Intent(MainActivity.this, ChatActivity.class);
-                        chatActivity.putExtra("tittle", "Contacted user Name");
+                        chatActivity.putExtra("tittle", marker.getTitle());
                         startActivity(chatActivity);
                         return true;
                     }
@@ -339,7 +400,7 @@ public class MainActivity extends AppCompatActivity
 
         mUserMarker = mMap.addMarker(new MarkerOptions().position(latLng).
                 icon(BitmapDescriptorFactory.fromBitmap(mapController
-                        .createCustomMarker(MainActivity.this, R.drawable.relevium, "Relevium"))));
+                        .createCustomMarker(MainActivity.this, R.drawable.relevium, "LocalUserLocationIcon"))));
         mUserMarker.setTitle(mUserFirstName+" "+mUserLastName);
         mUserMarker.setTag("UserLocationMarker");
 
