@@ -78,7 +78,7 @@ public class AgentActivity extends AppCompatActivity {
             }
 
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (count < 1) {
+                if (s.length() < 1) {
                     Log.v("TEST", "Focus lost");
                     //mImageSendText.setBackground(getResources().getDrawable(R.drawable.ic_mic));
                     mImageSendText.setVisibility(View.INVISIBLE);
@@ -113,7 +113,7 @@ public class AgentActivity extends AppCompatActivity {
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
                 RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         intent.putExtra(RecognizerIntent.EXTRA_PROMPT,
-                "Speech recognition demo");
+                "Talk Relevium smart agent!");
         startActivityForResult(intent, VOICE_RECOGNITION_REQUEST_CODE);
     }
 
@@ -214,6 +214,7 @@ public class AgentActivity extends AppCompatActivity {
 
         mTextToSpeech.speak(aJsonAnswer, TextToSpeech.QUEUE_FLUSH, null, null);
         sb = new StringBuilder();
+        mSendText.setText("");
     }
 
 }

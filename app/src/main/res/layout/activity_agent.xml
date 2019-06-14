@@ -6,24 +6,18 @@
 
     <android.support.v7.widget.RecyclerView
         android:layout_weight="1"
-        android:layout_marginBottom="10dp"
         android:id="@+id/private_messages_list_of_users"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="0dp">
     </android.support.v7.widget.RecyclerView>
 
 
     <LinearLayout
-        android:layout_weight="13"
-        android:layout_below="@id/private_messages_list_of_users"
-        android:id="@+id/chat_linear_layout"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentBottom="true"
-        android:background="@android:color/background_light"
+        android:padding="5dp"
+        android:gravity="center"
         android:orientation="horizontal"
-        >
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
         <EditText
             android:background="@drawable/rounded_corners"
