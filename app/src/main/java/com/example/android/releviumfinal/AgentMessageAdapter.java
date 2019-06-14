@@ -13,12 +13,12 @@ import java.util.List;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
-public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageViewHolder>
+public class AgentMessageAdapter extends RecyclerView.Adapter<AgentMessageAdapter.MessageViewHolder>
 {
     private List<Messages> userMessagesList;
 
 
-    public MessageAdapter (List<Messages> userMessagesList)
+    public AgentMessageAdapter(List<Messages> userMessagesList)
     {
         this.userMessagesList = userMessagesList;
     }

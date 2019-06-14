@@ -1,39 +1,42 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <ListView
-        android:background="#f1f1f1"
+    <android.support.v7.widget.RecyclerView
+        android:layout_weight="1"
+        android:id="@+id/private_messages_list_of_users"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-    </ListView>
+        android:layout_height="0dp">
+    </android.support.v7.widget.RecyclerView>
 
     <LinearLayout
-        android:padding="10dp"
+        android:padding="5dp"
         android:gravity="center"
         android:orientation="horizontal"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true">
+        android:layout_height="wrap_content">
 
         <EditText
             android:background="@drawable/rounded_corners"
             android:paddingBottom="3dp"
             android:layout_weight="4"
-            android:layout_marginRight="10dp"
+            android:id="@+id/client_editText"
+            android:layout_marginEnd="10dp"
             android:layout_width="match_parent"
             android:layout_height="45dp"
             android:hint="Write text..." />
 
-        <ImageView
+        <ImageButton
             android:layout_weight="1"
             android:layout_gravity="center"
             android:foregroundGravity="center"
             android:padding="13dp"
+            android:id="@+id/client_btn_text"
             android:background="@drawable/ic_send"
             android:layout_width="40dp"
             android:layout_height="40dp" />
 
     </LinearLayout>
-</RelativeLayout>
+</LinearLayout>

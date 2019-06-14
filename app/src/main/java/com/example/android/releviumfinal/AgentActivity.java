@@ -41,7 +41,7 @@ public class AgentActivity extends AppCompatActivity {
 
     private final List<Messages> messagesList = new ArrayList<>();
     private LinearLayoutManager linearLayoutManager;
-    private MessageAdapter messageAdapter;
+    private AgentMessageAdapter agentMessageAdapter;
     private RecyclerView userMessagesList;
 
     static final int VOICE_RECOGNITION_REQUEST_CODE = 1234;
@@ -54,11 +54,11 @@ public class AgentActivity extends AppCompatActivity {
         mImageSendText = findViewById(R.id.agent_btn_text);
         mImageSendVoice = findViewById(R.id.agent_btn_voice);
 
-        messageAdapter = new MessageAdapter(messagesList);
+        agentMessageAdapter = new AgentMessageAdapter(messagesList);
         userMessagesList = findViewById(R.id.private_messages_list_of_users);
         linearLayoutManager = new LinearLayoutManager(this);
         userMessagesList.setLayoutManager(linearLayoutManager);
-        userMessagesList.setAdapter(messageAdapter);
+        userMessagesList.setAdapter(agentMessageAdapter);
 
         mTextToSpeech = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
             @Override
@@ -177,7 +177,7 @@ public class AgentActivity extends AppCompatActivity {
                                     Messages userQuery = new Messages("user", question,saveCurrentTime , saveCurrentDate);
 
                                     messagesList.add(userQuery);
-                                    messageAdapter.notifyDataSetChanged();
+                                    agentMessageAdapter.notifyDataSetChanged();
 
                                     readJsonFile(sb.toString());
                                 } catch (JSONException e) {
@@ -209,7 +209,7 @@ public class AgentActivity extends AppCompatActivity {
 
         Messages agentAnswer = new Messages("agent", aJsonAnswer, saveCurrentDate, saveCurrentTime);
         messagesList.add(agentAnswer);
-        messageAdapter.notifyDataSetChanged();
+        agentMessageAdapter.notifyDataSetChanged();
         userMessagesList.smoothScrollToPosition(userMessagesList.getAdapter().getItemCount());
 
         mTextToSpeech.speak(aJsonAnswer, TextToSpeech.QUEUE_FLUSH, null, null);

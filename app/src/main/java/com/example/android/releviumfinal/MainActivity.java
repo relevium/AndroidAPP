@@ -56,6 +56,13 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.InstanceIdResult;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
+
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener {
 
@@ -66,13 +73,16 @@ public class MainActivity extends AppCompatActivity
     private LocationRequest mLocationRequest;
     private SupportMapFragment mapFragment;
     private NotificationManagerCompat mNotificationManagerPing, mNotificationManagerLocation;
-    private ChildEventListener pingListener;
+    private ChildEventListener mPingListener, mUserLocationListener, mUserStatuesListener;
+    private ArrayList<Marker> mForeignUserLocation = new ArrayList<>();
     private String mUserFirstName;
     private String mUserLastName;
     private String mUserUID;
     private FirebaseUser mUser;
     private FirebaseAuth mUserAuth;
     private Marker mUserMarker;
+
+    private DatabaseReference mRootRef;
 
     private MapController mapController;
 
@@ -92,7 +102,7 @@ public class MainActivity extends AppCompatActivity
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
+        mRootRef = FirebaseDatabase.getInstance().getReference();
 
         drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -117,18 +127,19 @@ public class MainActivity extends AppCompatActivity
         mapController = new MapController(FirebaseAuth.getInstance().getUid());
 
         mUserAuth = FirebaseAuth.getInstance();
-        DatabaseReference userDB = FirebaseDatabase.getInstance().getReference();
         mUser = mUserAuth.getCurrentUser();
         mUserUID = mUser.getUid();
 
-        userDB.child("Users").child(mUserUID).addValueEventListener(new ValueEventListener() {
+        mRootRef.child("Users").child(mUserUID).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 mUserFirstName = dataSnapshot.child("mFirstName").getValue(String.class);
                 mUserLastName = dataSnapshot.child("mLastName").getValue(String.class);
             }
+
             @Override
-            public void onCancelled(DatabaseError databaseError) {}
+            public void onCancelled(DatabaseError databaseError) {
+            }
         });
 
         mFAB1 = findViewById(R.id.fab_warning);
@@ -159,7 +170,7 @@ public class MainActivity extends AppCompatActivity
         mNotificationManagerPing = NotificationManagerCompat.from(this);
         DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference("Ping-Details");
 
-        pingListener = mDatabase.addChildEventListener(new ChildEventListener() { //attach listener
+        mPingListener = mDatabase.addChildEventListener(new ChildEventListener() { //attach listener
 
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, String prevChildKey) { //something changed!
@@ -250,11 +261,11 @@ public class MainActivity extends AppCompatActivity
             }
 
         });
-        mDatabase.addChildEventListener(pingListener);
+        mDatabase.addChildEventListener(mPingListener);
 
         DatabaseReference mUserLocationDataBase = FirebaseDatabase.getInstance().getReference("User-Location");
 
-        pingListener = mUserLocationDataBase.addChildEventListener(new ChildEventListener() { //attach listener
+        mUserLocationListener = mUserLocationDataBase.addChildEventListener(new ChildEventListener() { //attach listener
 
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, String prevChildKey) { //something changed!
@@ -269,21 +280,34 @@ public class MainActivity extends AppCompatActivity
                         .getInstance()
                         .getReference("Users");
 
-                userInfo.addListenerForSingleValueEvent(new ValueEventListener() {
+                userInfo.addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        String userFirstName, userLastName;
+                        String userFirstName, userLastName, userState;
                         userFirstName = (String) dataSnapshot.child(uuid).child("mFirstName").getValue();
                         userLastName = (String) dataSnapshot.child(uuid).child("mLastName").getValue();
+                        userState = (String) dataSnapshot.child(uuid).child("userState").child("state").getValue();
                         dataSnapshot.child(uuid).child("mImage").getValue();
 
-                        LatLng latLng = new LatLng(lat,lng);
+                        LatLng latLng = new LatLng(lat, lng);
 
-                        Marker foreignUserLocation = mMap.addMarker(new MarkerOptions().position(latLng).
-                                icon(BitmapDescriptorFactory.fromBitmap(mapController
-                                        .createCustomMarker(MainActivity.this, R.drawable.relevium, "ForeignerUserLocationIcon"))));
-                        foreignUserLocation.setTitle(userFirstName+" "+userLastName);
-                        foreignUserLocation.setTag("UserLocationMarker");
+                        if (userState == null) {
+                            userState = "neutral";
+                        }
+                        if (userState.equals("online")) {
+                            if (!uuid.equals(mUserUID)) {
+                                Marker foreignUserLocation = mMap.addMarker(new MarkerOptions().position(latLng).
+                                        icon(BitmapDescriptorFactory.fromBitmap(mapController
+                                                .createCustomMarker(MainActivity.this, R.drawable.relevium, "ForeignerUserLocationIcon"))));
+                                foreignUserLocation.setTitle(userFirstName + " " + userLastName);
+                                foreignUserLocation.setSnippet(uuid);
+                                foreignUserLocation.setTag("UserLocationMarker");
+
+                                mForeignUserLocation.add(foreignUserLocation);
+                            }
+
+                        }
+
                     }
 
                     @Override
@@ -315,9 +339,58 @@ public class MainActivity extends AppCompatActivity
             }
 
         });
-        mUserLocationDataBase.addChildEventListener(pingListener);
+        mUserLocationDataBase.addChildEventListener(mUserLocationListener);
+
+        DatabaseReference userInfo = FirebaseDatabase
+                .getInstance()
+                .getReference("Users");
+
+        mUserStatuesListener = userInfo.addChildEventListener(new ChildEventListener() {
+
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, String prevChildKey) {
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                String userState, uuid;
+                uuid = dataSnapshot.getKey();
+                userState = (String) dataSnapshot.child("userState").child("state").getValue();
+
+                if (userState == null) {
+                    userState = "neutral";
+                }
+                if (userState.equals("offline")) {
+                    for (int i = 0; i < mForeignUserLocation.size(); i++) {
+                        if (mForeignUserLocation.get(i).getSnippet().equals(uuid)) {
+                            mForeignUserLocation.get(i).remove();
+                            mForeignUserLocation.remove(i);
+                            break;
+                        }
+                    }
+
+                }
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+        });
+        userInfo.addChildEventListener(mUserStatuesListener);
 
     }
+
 
     public void addMarkerOnMap(String msg, int icon, int imageID) {
         if (mLastLocation != null) {
@@ -330,20 +403,19 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-    public void sendNotificationDisasterChannel(int icon, String message) {
+    public void sendNotificationDisasterChannel(int icon, String message, String Tittle) {
         Notification notification = new NotificationCompat.Builder(this, ApplicationController.CHANNEL_1_ID)
                 .setSmallIcon(icon)
-                .setContentTitle("New Alert nearby !")
+                .setContentTitle(Tittle)
                 .setContentText(message)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                .setCategory(NotificationCompat.CATEGORY_ALARM)
+                .setCategory(NotificationCompat.CATEGORY_EVENT)
                 .build();
         mNotificationManagerPing.notify(1, notification);
     }
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
-        Log.v("TEST123", "OnMapReady");
         mMap = googleMap;
         mMap.getUiSettings().setZoomControlsEnabled(true);
         mMap.animateCamera(CameraUpdateFactory.zoomTo(11));
@@ -359,14 +431,14 @@ public class MainActivity extends AppCompatActivity
         mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
-                if(marker.getTag().equals("UserLocationMarker")){
-                    if(marker.getTitle().equals(mUserMarker.getTitle())){
+                if (marker.getTag().equals("UserLocationMarker")) {
+                    if (marker.getTitle().equals(mUserMarker.getTitle())) {
                         marker.showInfoWindow();
                         return false;
-                    }
-                    else{
+                    } else {
                         Intent chatActivity = new Intent(MainActivity.this, ChatActivity.class);
                         chatActivity.putExtra("tittle", marker.getTitle());
+                        chatActivity.putExtra("visit_user_id", marker.getSnippet());
                         startActivity(chatActivity);
                         return true;
                     }
@@ -394,14 +466,14 @@ public class MainActivity extends AppCompatActivity
 
         mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
         mapController.trackUserLocation(latLng);
-        if(mUserMarker != null){
+        if (mUserMarker != null) {
             mUserMarker.remove();
         }
 
         mUserMarker = mMap.addMarker(new MarkerOptions().position(latLng).
                 icon(BitmapDescriptorFactory.fromBitmap(mapController
                         .createCustomMarker(MainActivity.this, R.drawable.relevium, "LocalUserLocationIcon"))));
-        mUserMarker.setTitle(mUserFirstName+" "+mUserLastName);
+        mUserMarker.setTitle(mUserFirstName + " " + mUserLastName);
         mUserMarker.setTag("UserLocationMarker");
 
 
@@ -560,8 +632,9 @@ public class MainActivity extends AppCompatActivity
             Intent profileActivity = new Intent(this, ProfileActivity.class);
             startActivity(profileActivity);
         } else if (id == R.id.nav_chat) {
-            Intent chatActivity = new Intent(this, ChatActivity.class);
-            startActivity(chatActivity);
+//            Intent chatActivity = new Intent(this, ChatActivity.class);
+//            startActivity(chatActivity);
+            Toast.makeText(MainActivity.this, "Coming Soon !", Toast.LENGTH_SHORT).show();
         } else if (id == R.id.nav_share) {
             Toast.makeText(this, "Location shared!", Toast.LENGTH_SHORT).show();
         } else if (id == R.id.nav_sos) {
@@ -571,5 +644,68 @@ public class MainActivity extends AppCompatActivity
         drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private void updateUserStatus(String state) {
+        String saveCurrentTime, saveCurrentDate;
+
+        Calendar calendar = Calendar.getInstance();
+
+        DateFormat currentDate = java.text.SimpleDateFormat.getDateInstance();
+        saveCurrentDate = currentDate.format(calendar.getTime());
+
+        DateFormat currentTime = SimpleDateFormat.getTimeInstance();
+        saveCurrentTime = currentTime.format(calendar.getTime());
+
+        HashMap<String, Object> onlineStateMap = new HashMap<>();
+        onlineStateMap.put("time", saveCurrentTime);
+        onlineStateMap.put("date", saveCurrentDate);
+        onlineStateMap.put("state", state);
+
+        mRootRef.child("Users").child(mUserUID).child("userState")
+                .updateChildren(onlineStateMap);
+
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        if (mUserUID == null) {
+            Intent loginIntent = new Intent(MainActivity.this, LoginActivity.class);
+            loginIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(loginIntent);
+        } else {
+            updateUserStatus("online");
+
+            VerifyUserExistance();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        if (mUserUID != null) {
+            updateUserStatus("offline");
+        }
+    }
+
+    private void VerifyUserExistance() {
+        String currentUserID = mUserAuth.getCurrentUser().getUid();
+
+        mRootRef.child("Users").child(currentUserID).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (!(dataSnapshot.child("name").exists())) {
+                    //SendUserToSettingsActivity();
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
     }
 }
