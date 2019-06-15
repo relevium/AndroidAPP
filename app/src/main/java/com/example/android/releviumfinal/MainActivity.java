@@ -3,6 +3,8 @@ package com.example.android.releviumfinal;
 import android.Manifest;
 import android.app.Activity;
 import android.app.Notification;
+import android.app.PendingIntent;
+import android.app.TaskStackBuilder;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
@@ -412,7 +414,6 @@ public class MainActivity extends AppCompatActivity
 
                     @Override
                     public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                        Log.v("Test", count + " counter");
                         if (count > 1) {
                             String fromUserUID, message, fromUserName;
 
@@ -421,13 +422,10 @@ public class MainActivity extends AppCompatActivity
                             message = messages.getMessage();
                             fromUserName = messages.getFromName();
 
-                            Log.v("Test", fromUserUID.equals(mUserUID) + "");
-                            Log.v("Test", mUserUID + " myID");
-                            Log.v("Test", fromUserUID + " senderID");
-
-
                             if (!fromUserUID.equals(mUserUID)) {
-                                sendNotificationChatChannel(R.drawable.ic_menu_message, message, "New message from " + fromUserName);
+                                sendNotificationChatChannel(R.drawable.ic_menu_message,
+                                        message, "New message from " + fromUserName,
+                                        fromUserName, fromUserUID);
                             }
                         } else {
                             count++;
@@ -481,7 +479,6 @@ public class MainActivity extends AppCompatActivity
             }
         });
         rootMessageRef.addChildEventListener(mMessageListener);
-
     }
 
 
@@ -496,13 +493,26 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-    public void sendNotificationChatChannel(int icon, String message, String Tittle) {
+    public void sendNotificationChatChannel(int icon, String message, String tittle,
+                                            String targetUserName, String targetUserUUID) {
+        Intent chatIntent = new Intent(MainActivity.this, ChatActivity.class);
+        chatIntent.putExtra("tittle", targetUserName);
+        chatIntent.putExtra("visit_user_id", targetUserUUID);
+        chatIntent.putExtra("name", mUserFirstName + " " + mUserLastName);
+        // Create the TaskStackBuilder and add the intent, which inflates the back stack
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+        stackBuilder.addNextIntentWithParentStack(chatIntent);
+        // Get the PendingIntent containing the entire back stack
+        PendingIntent resultPendingIntent =
+                stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+
         Notification notification = new NotificationCompat.Builder(this, ApplicationController.CHANNEL_1_ID)
                 .setSmallIcon(icon)
-                .setContentTitle(Tittle)
+                .setContentTitle(tittle)
                 .setContentText(message)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setCategory(NotificationCompat.CATEGORY_EVENT)
+                .setContentIntent(resultPendingIntent)
                 .build();
         mNotificationManagerPing.notify(1, notification);
     }
