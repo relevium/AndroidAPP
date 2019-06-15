@@ -97,7 +97,7 @@ public class ProfileActivity extends AppCompatActivity {
         bloodSpinner = findViewById(R.id.blood_spinner);
         statusSwitch = findViewById(R.id.online_switch);
         diseasSwitch = findViewById(R.id.disease_switch);
-        loadingBar = new ProgressDialog(this);
+        loadingBar = new ProgressDialog(ProfileActivity.this);
         setTitle("Account Settings");
     }
 

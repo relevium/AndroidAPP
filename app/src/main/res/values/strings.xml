@@ -29,8 +29,9 @@
 
     <string name="blood_prompt">Choose a blood type</string>
     <string-array name="blood_array">
+        <item>Not-Specified</item>
         <item>A+</item>
-        <item>A- States</item>
+        <item>A-</item>
         <item>B+</item>
         <item>B-</item>
         <item>O+</item>

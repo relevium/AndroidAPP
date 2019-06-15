@@ -1,5 +1,6 @@
 package com.example.android.releviumfinal;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -24,6 +25,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     private Button googleBtn;
     private Button twitterBtn;
     private Button facebooknBtn;
+    private ProgressDialog loadingBar;
 
     private EditText userNameEdt;
     private EditText passwordEdt;
@@ -39,12 +41,12 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         //get the resource id from xml file
         loginBtn = (Button) findViewById(R.id.login);
         registerBtn = (Button) findViewById(R.id.register);
-        googleBtn = (Button) findViewById(R.id.google);
-        twitterBtn = (Button) findViewById(R.id.twitter);
-        facebooknBtn = (Button) findViewById(R.id.facebook);
 
         userNameEdt = (EditText) findViewById(R.id.username);
         passwordEdt = (EditText) findViewById(R.id.password);
+
+
+        loadingBar = new ProgressDialog(LoginActivity.this);
 
         mAuth = FirebaseAuth.getInstance();
         //Set onClick listener for each button
@@ -56,6 +58,10 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
         final String userName = userNameEdt.getText().toString().trim();
         String password = passwordEdt.getText().toString().trim();
+        loadingBar.setTitle("Logging-in");
+        loadingBar.setMessage("Logging you in, this may take a moment.");
+        loadingBar.setCanceledOnTouchOutside(false);
+        loadingBar.show();
         if( !(userName.isEmpty() && password.isEmpty()) )
             mAuth.signInWithEmailAndPassword(userName, password)
                     .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
@@ -65,12 +71,15 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                                 // Sign in success, update UI with the signed-in user's information
                                 FirebaseUser user = mAuth.getCurrentUser();
                                 Intent mainActivity = new Intent(LoginActivity.this, MainActivity.class);
+                                mainActivity.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                loadingBar.dismiss();
                                 // Start the new activity
                                 startActivity(mainActivity);
                             } else {
                                 // If sign in fails, display a message to the user.
                                 Toast.makeText(LoginActivity.this, "Incorrect user name or password.",
                                         Toast.LENGTH_SHORT).show();
+                                loadingBar.dismiss();
                             }
 
                             // ...
@@ -85,8 +94,9 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 loginUser();
                 break;
             case R.id.register:
-                Intent mainActivity = new Intent(LoginActivity.this, RegisterActivity.class);
-                startActivity(mainActivity);
+                Intent registerActivity = new Intent(LoginActivity.this, RegisterActivity.class);
+                registerActivity.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(registerActivity);
                 break;
 
         }

@@ -1,5 +1,6 @@
 package com.example.android.releviumfinal;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -27,6 +28,8 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
     private EditText passwordEdt;
     private EditText repasswordEdt;
 
+    private ProgressDialog loadingBar;
+
     private FirebaseAuth mAuth;
 
     @Override
@@ -42,6 +45,7 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
         emailEdt = (EditText) findViewById(R.id.email_register);
         passwordEdt = (EditText) findViewById(R.id.password_register);
         repasswordEdt = (EditText) findViewById(R.id.re_password_register);
+        loadingBar = new ProgressDialog(RegisterActivity.this);
 
         mAuth = FirebaseAuth.getInstance();
 
@@ -90,11 +94,17 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
             return;
         }
         //progressBar.setVisibility(View.VISIBLE);
+        loadingBar.setTitle("Registering");
+        loadingBar.setMessage("Registering you in our servers, this may take a moment.");
+        loadingBar.setCanceledOnTouchOutside(false);
+        loadingBar.show();
 
         mAuth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
+
+
 
                         if (task.isSuccessful()) {
 
@@ -111,6 +121,7 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
                                 public void onComplete(@NonNull Task<Void> task) {
                                     //progressBar.setVisibility(View.GONE);
                                     if (task.isSuccessful()) {
+                                        loadingBar.dismiss();
                                         Toast.makeText(RegisterActivity.this, "Registered Successfully", Toast.LENGTH_LONG).show();
                                         Intent loginActivity = new Intent(RegisterActivity.this, LoginActivity.class);
                                         startActivity(loginActivity);
@@ -121,6 +132,7 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
                             });
 
                         } else {
+                            loadingBar.dismiss();
                             Toast.makeText(RegisterActivity.this, task.getException().getMessage(), Toast.LENGTH_LONG).show();
                         }
                     }
