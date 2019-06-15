@@ -88,6 +88,7 @@ public class MainActivity extends AppCompatActivity
     private FirebaseAuth mUserAuth;
     private Marker mUserMarker;
     private Boolean mAnonymityPreference;
+    private Target mTarget;
 
     TextView mNDUserName, mNDEmail;
 
@@ -323,7 +324,7 @@ public class MainActivity extends AppCompatActivity
                             if (userState.equals("online")) {
                                 if (!uuid.equals(mUserUID)) {
                                     if (image != null) {
-                                        Target mTarget = new Target() {
+                                        mTarget = new Target() {
                                             @Override
                                             public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
                                                 final Marker foreignUserLocation = mMap.addMarker(new MarkerOptions()
@@ -334,6 +335,7 @@ public class MainActivity extends AppCompatActivity
                                                 );
                                                 foreignUserLocation.setTag("UserLocationMarker");
                                                 mForeignUserLocation.add(foreignUserLocation);
+
                                             }
 
                                             @Override
@@ -352,6 +354,7 @@ public class MainActivity extends AppCompatActivity
                                                 .centerCrop()
                                                 .transform(new BubbleTransformation(20))
                                                 .into(mTarget);
+
                                     } else {
                                         Marker foreignUserLocation = mMap.addMarker(new MarkerOptions().position(latLng).
                                                 icon(BitmapDescriptorFactory.fromBitmap(mapController
