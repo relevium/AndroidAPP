@@ -8,6 +8,8 @@ import android.app.TaskStackBuilder;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -58,6 +60,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.InstanceIdResult;
+import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -83,6 +87,7 @@ public class MainActivity extends AppCompatActivity
     private FirebaseUser mUser;
     private FirebaseAuth mUserAuth;
     private Marker mUserMarker;
+    private Boolean mAnonymityPreference;
 
     TextView mNDUserName, mNDEmail;
 
@@ -144,6 +149,7 @@ public class MainActivity extends AppCompatActivity
                 mUserFirstName = dataSnapshot.child("mFirstName").getValue(String.class);
                 mUserLastName = dataSnapshot.child("mLastName").getValue(String.class);
                 mUserEmail = dataSnapshot.child("mEmail").getValue(String.class);
+                mAnonymityPreference = dataSnapshot.child("AnonymityPreference").getValue(Boolean.class);
                 String concatName = (mUserFirstName + " " + mUserLastName);
                 mNDUserName.setText(concatName);
                 mNDEmail.setText(mUserEmail);
@@ -187,7 +193,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, String prevChildKey) { //something changed!
 
-                Log.v("TEST1","mPingListener Working");
+                Log.v("TEST1", "mPingListener Working");
 
                 final String description;
                 final String imageId;
@@ -282,7 +288,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, String prevChildKey) { //something changed!
 
-                Log.v("TEST1","mUserLocationListener Working");
+                Log.v("TEST1", "mUserLocationListener Working");
 
                 final String uuid = dataSnapshot.getKey();
                 final double lat, lng;
@@ -297,30 +303,70 @@ public class MainActivity extends AppCompatActivity
                 userInfo.addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        String userFirstName, userLastName, userState;
+                        Boolean foreignerAnonymityPreference;
+                        final String userFirstName, userLastName, image;
+                        String userState;
                         userFirstName = (String) dataSnapshot.child(uuid).child("mFirstName").getValue();
                         userLastName = (String) dataSnapshot.child(uuid).child("mLastName").getValue();
                         userState = (String) dataSnapshot.child(uuid).child("userState").child("state").getValue();
-                        dataSnapshot.child(uuid).child("mImage").getValue();
+                        foreignerAnonymityPreference = dataSnapshot.child(uuid).child("AnonymityPreference").getValue(Boolean.class);
+                        image = dataSnapshot.child(uuid).child("image").getValue(String.class);
 
-                        LatLng latLng = new LatLng(lat, lng);
-
+                        final LatLng latLng = new LatLng(lat, lng);
+                        if (foreignerAnonymityPreference == null) {
+                            foreignerAnonymityPreference = false;
+                        }
                         if (userState == null) {
                             userState = "neutral";
                         }
-                        if (userState.equals("online")) {
-                            if (!uuid.equals(mUserUID)) {
-                                Marker foreignUserLocation = mMap.addMarker(new MarkerOptions().position(latLng).
-                                        icon(BitmapDescriptorFactory.fromBitmap(mapController
-                                                .createCustomMarker(MainActivity.this, R.drawable.ic_default_profile_pic, "ForeignerUserLocationIcon"))));
-                                foreignUserLocation.setTitle(userFirstName + " " + userLastName);
-                                foreignUserLocation.setSnippet(uuid);
-                                foreignUserLocation.setTag("UserLocationMarker");
+                        if (!foreignerAnonymityPreference) {
+                            if (userState.equals("online")) {
+                                if (!uuid.equals(mUserUID)) {
+                                    if (image != null) {
+                                        Target mTarget = new Target() {
+                                            @Override
+                                            public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+                                                final Marker foreignUserLocation = mMap.addMarker(new MarkerOptions()
+                                                        .position(latLng)
+                                                        .icon(BitmapDescriptorFactory.fromBitmap(bitmap))
+                                                        .title(userFirstName + " " + userLastName)
+                                                        .snippet(uuid)
+                                                );
+                                                foreignUserLocation.setTag("UserLocationMarker");
+                                                mForeignUserLocation.add(foreignUserLocation);
+                                            }
 
-                                mForeignUserLocation.add(foreignUserLocation);
+                                            @Override
+                                            public void onBitmapFailed(Exception e, Drawable errorDrawable) {
+                                                Log.d("picasso", "onBitmapFailed");
+                                            }
+
+                                            @Override
+                                            public void onPrepareLoad(Drawable placeHolderDrawable) {
+
+                                            }
+                                        };
+                                        Picasso.get()
+                                                .load(image)
+                                                .resize(200, 200)
+                                                .centerCrop()
+                                                .transform(new BubbleTransformation(20))
+                                                .into(mTarget);
+                                    } else {
+                                        Marker foreignUserLocation = mMap.addMarker(new MarkerOptions().position(latLng).
+                                                icon(BitmapDescriptorFactory.fromBitmap(mapController
+                                                        .createCustomMarker(MainActivity.this, R.drawable.ic_default_profile_pic, "ForeignerUserLocationIcon"))));
+                                        foreignUserLocation.setTitle(userFirstName + " " + userLastName);
+                                        foreignUserLocation.setSnippet(uuid);
+                                        foreignUserLocation.setTag("UserLocationMarker");
+
+                                        mForeignUserLocation.add(foreignUserLocation);
+                                    }
+                                }
+
                             }
-
                         }
+
 
                     }
 
@@ -371,7 +417,7 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                Log.v("TEST1","mUserStatuesListener Working");
+                Log.v("TEST1", "mUserStatuesListener Working");
                 String userState, uuid;
                 uuid = dataSnapshot.getKey();
                 userState = (String) dataSnapshot.child("userState").child("state").getValue();
@@ -409,7 +455,7 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, String s) {
-                Log.v("TEST1","mMessageListener Working");
+                Log.v("TEST1", "mMessageListener Working");
                 messageRef = dataSnapshot.getRef();
 
                 test = messageRef.limitToLast(1).addChildEventListener(new ChildEventListener() {
@@ -424,7 +470,7 @@ public class MainActivity extends AppCompatActivity
                             message = messages.getMessage();
                             fromUserName = messages.getFromName();
 
-                            if(mUserUID != null && fromUserUID != null){
+                            if (mUserUID != null && fromUserUID != null) {
                                 if (!fromUserUID.equals(mUserUID)) {
                                     sendNotificationChatChannel(R.drawable.ic_menu_message,
                                             message, "New message from " + fromUserName,
@@ -565,14 +611,16 @@ public class MainActivity extends AppCompatActivity
                 .build();
         mGoogleApiClient.connect();
     }
+
     boolean flag = true;
+
     @Override
     public void onLocationChanged(Location location) {
         mLastLocation = location;
 
         LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
 
-        if(flag) {
+        if (flag) {
             mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
             mMap.animateCamera(CameraUpdateFactory.zoomTo(11));
             flag = false;
@@ -583,11 +631,22 @@ public class MainActivity extends AppCompatActivity
             mUserMarker.remove();
         }
 
-        mUserMarker = mMap.addMarker(new MarkerOptions().position(latLng).
-                icon(BitmapDescriptorFactory.fromBitmap(mapController
-                        .createCustomMarker(MainActivity.this, R.drawable.ic_default_profile_pic, "LocalUserLocationIcon"))));
-        mUserMarker.setTitle(mUserFirstName + " " + mUserLastName);
-        mUserMarker.setTag("UserLocationMarker");
+        if (mAnonymityPreference == null) {
+            mAnonymityPreference = false;
+        }
+        if (mAnonymityPreference) {
+            mUserMarker = mMap.addMarker(new MarkerOptions().position(latLng).
+                    icon(BitmapDescriptorFactory.fromBitmap(mapController
+                            .createCustomMarker(MainActivity.this, R.drawable.ic_action_name, "LocalUserLocationIcon"))));
+            mUserMarker.setTitle(mUserFirstName + " " + mUserLastName);
+            mUserMarker.setTag("UserLocationMarker");
+        } else {
+            mUserMarker = mMap.addMarker(new MarkerOptions().position(latLng).
+                    icon(BitmapDescriptorFactory.fromBitmap(mapController
+                            .createCustomMarker(MainActivity.this, R.drawable.ic_default_profile_pic, "LocalUserLocationIcon"))));
+            mUserMarker.setTitle(mUserFirstName + " " + mUserLastName);
+            mUserMarker.setTag("UserLocationMarker");
+        }
 
 
     }
@@ -781,8 +840,9 @@ public class MainActivity extends AppCompatActivity
         userInfoRef.removeEventListener(mUserStatuesListener);
         updateUserStatus("offline");
     }
+
     @Override
-    public void onResume(){
+    public void onResume() {
         super.onResume();
     }
 
@@ -818,7 +878,7 @@ public class MainActivity extends AppCompatActivity
         } else {
             updateUserStatus("online");
 
-            VerifyUserExistance();
+            VerifyUserExistence();
         }
     }
 
@@ -837,14 +897,14 @@ public class MainActivity extends AppCompatActivity
         userInfoRef.removeEventListener(mUserStatuesListener);
     }
 
-    private void VerifyUserExistance() {
+    private void VerifyUserExistence() {
         String currentUserID = mUserAuth.getCurrentUser().getUid();
 
         mRootRef.child("Users").child(currentUserID).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                if (!(dataSnapshot.child("name").exists())) {
-                    //SendUserToSettingsActivity();
+                if (!(dataSnapshot.child("mFirstName").exists())) {
+                    SendUserToSettingsActivity();
                 }
             }
 
@@ -853,5 +913,10 @@ public class MainActivity extends AppCompatActivity
 
             }
         });
+    }
+
+    private void SendUserToSettingsActivity() {
+        Intent settingsIntent = new Intent(MainActivity.this, ProfileActivity.class);
+        startActivity(settingsIntent);
     }
 }
