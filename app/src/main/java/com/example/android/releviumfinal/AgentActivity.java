@@ -174,7 +174,7 @@ public class AgentActivity extends AppCompatActivity {
                                     DateFormat currentTime = SimpleDateFormat.getTimeInstance();
                                     String saveCurrentTime = currentTime.format(calendar.getTime());
 
-                                    Messages userQuery = new Messages("user", question,saveCurrentTime , saveCurrentDate);
+                                    Messages userQuery = new Messages("user", question,saveCurrentTime , saveCurrentDate, "user");
 
                                     messagesList.add(userQuery);
                                     agentMessageAdapter.notifyDataSetChanged();
@@ -207,7 +207,7 @@ public class AgentActivity extends AppCompatActivity {
         DateFormat currentTime = SimpleDateFormat.getTimeInstance();
         String saveCurrentTime = currentTime.format(calendar.getTime());
 
-        Messages agentAnswer = new Messages("agent", aJsonAnswer, saveCurrentDate, saveCurrentTime);
+        Messages agentAnswer = new Messages("agent", aJsonAnswer, saveCurrentDate, saveCurrentTime, "agent");
         messagesList.add(agentAnswer);
         agentMessageAdapter.notifyDataSetChanged();
         userMessagesList.smoothScrollToPosition(userMessagesList.getAdapter().getItemCount());

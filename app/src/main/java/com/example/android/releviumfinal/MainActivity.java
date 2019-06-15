@@ -73,7 +73,7 @@ public class MainActivity extends AppCompatActivity
     private LocationRequest mLocationRequest;
     private SupportMapFragment mapFragment;
     private NotificationManagerCompat mNotificationManagerPing, mNotificationManagerLocation;
-    private ChildEventListener mPingListener, mUserLocationListener, mUserStatuesListener;
+    private ChildEventListener mPingListener, mUserLocationListener, mUserStatuesListener, mMessageListener;
     private ArrayList<Marker> mForeignUserLocation = new ArrayList<>();
     private String mUserFirstName;
     private String mUserLastName;
@@ -142,7 +142,7 @@ public class MainActivity extends AppCompatActivity
                 mUserFirstName = dataSnapshot.child("mFirstName").getValue(String.class);
                 mUserLastName = dataSnapshot.child("mLastName").getValue(String.class);
                 mUserEmail = dataSnapshot.child("mEmail").getValue(String.class);
-                String concatName = (mUserFirstName+" "+mUserLastName);
+                String concatName = (mUserFirstName + " " + mUserLastName);
                 mNDUserName.setText(concatName);
                 mNDEmail.setText(mUserEmail);
             }
@@ -399,6 +399,89 @@ public class MainActivity extends AppCompatActivity
         });
         userInfo.addChildEventListener(mUserStatuesListener);
 
+        DatabaseReference rootMessageRef = FirebaseDatabase.getInstance().getReference("Messages/" + mUserUID);
+
+        mMessageListener = rootMessageRef.addChildEventListener(new ChildEventListener() {
+            int count = 0;
+
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, String s) {
+                DatabaseReference messageRef = dataSnapshot.getRef();
+
+                messageRef.limitToLast(1).addChildEventListener(new ChildEventListener() {
+
+                    @Override
+                    public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                        Log.v("Test", count + " counter");
+                        if (count > 1) {
+                            String fromUserUID, message, fromUserName;
+
+                            Messages messages = dataSnapshot.getValue(Messages.class);
+                            fromUserUID = messages.getFrom();
+                            message = messages.getMessage();
+                            fromUserName = messages.getFromName();
+
+                            Log.v("Test", fromUserUID.equals(mUserUID) + "");
+                            Log.v("Test", mUserUID + " myID");
+                            Log.v("Test", fromUserUID + " senderID");
+
+
+                            if (!fromUserUID.equals(mUserUID)) {
+                                sendNotificationChatChannel(R.drawable.ic_menu_message, message, "New message from " + fromUserName);
+                            }
+                        } else {
+                            count++;
+                        }
+
+
+                    }
+
+                    @Override
+                    public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+                    }
+
+                    @Override
+                    public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+
+                    }
+
+                    @Override
+                    public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                    }
+                });
+
+
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+        rootMessageRef.addChildEventListener(mMessageListener);
+
     }
 
 
@@ -449,6 +532,7 @@ public class MainActivity extends AppCompatActivity
                         Intent chatActivity = new Intent(MainActivity.this, ChatActivity.class);
                         chatActivity.putExtra("tittle", marker.getTitle());
                         chatActivity.putExtra("visit_user_id", marker.getSnippet());
+                        chatActivity.putExtra("name", mUserFirstName + " " + mUserLastName);
                         startActivity(chatActivity);
                         return true;
                     }

@@ -2,19 +2,28 @@ package com.example.android.releviumfinal;
 
 public class Messages
 {
-    private String from, message, type, to, messageID, time, date, name;
+    private String from, message, type, to, messageID, time, date, name, fromName;
 
     public Messages()
     {
 
     }
 
-    public Messages(String from, String message, String time, String date) {
+    public Messages(String from, String message, String time, String date, String fromName) {
         this.from = from;
         this.message = message;
         this.type = "text";
         this.date = date;
         this.time = time;
+        this.fromName = fromName;
+    }
+
+    public String getFromName() {
+        return fromName;
+    }
+
+    public void getFromName(String fromName) {
+        this.from = fromName;
     }
 
     public String getFrom() {

@@ -39,7 +39,7 @@ import java.util.Map;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 public class ChatActivity extends AppCompatActivity {
-    private String messageReceiverID, messageReceiverName, messageReceiverImage, messageSenderID;
+    private String messageReceiverID, messageReceiverName, messageReceiverImage, messageSenderID, messageSenderName;
 
     private CircleImageView userImage;
 
@@ -65,6 +65,7 @@ public class ChatActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
         messageReceiverName = getIntent().getStringExtra("tittle");
+        messageSenderName = getIntent().getStringExtra("name");
         setTitle(messageReceiverName);
 
 
@@ -107,14 +108,6 @@ public class ChatActivity extends AppCompatActivity {
         userMessagesList.setLayoutManager(linearLayoutManager);
         userMessagesList.setAdapter(messageAdapter);
 
-
-        java.util.Calendar calendar = Calendar.getInstance();
-
-        DateFormat currentDate = SimpleDateFormat.getDateInstance();
-        saveCurrentDate = currentDate.format(calendar.getTime());
-
-        DateFormat currentTime = SimpleDateFormat.getTimeInstance();
-        saveCurrentTime = currentTime.format(calendar.getTime());
     }
 
 
@@ -216,8 +209,17 @@ public class ChatActivity extends AppCompatActivity {
 
             String messagePushID = userMessageKeyRef.getKey();
 
+            java.util.Calendar calendar = Calendar.getInstance();
+
+            DateFormat currentDate = SimpleDateFormat.getDateInstance();
+            saveCurrentDate = currentDate.format(calendar.getTime());
+
+            DateFormat currentTime = SimpleDateFormat.getTimeInstance();
+            saveCurrentTime = currentTime.format(calendar.getTime());
+
             Map messageTextBody = new HashMap();
             messageTextBody.put("message", messageText);
+            messageTextBody.put("fromName", messageSenderName);
             messageTextBody.put("from", messageSenderID);
             messageTextBody.put("type", "text");
             messageTextBody.put("to", messageReceiverID);
@@ -235,7 +237,7 @@ public class ChatActivity extends AppCompatActivity {
                 {
                     if (task.isSuccessful())
                     {
-                        Toast.makeText(ChatActivity.this, "Message Sent Successfully...", Toast.LENGTH_SHORT).show();
+
                     }
                     else
                     {
