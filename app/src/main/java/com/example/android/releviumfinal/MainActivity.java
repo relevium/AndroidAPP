@@ -75,7 +75,7 @@ public class MainActivity extends AppCompatActivity
     private LocationRequest mLocationRequest;
     private SupportMapFragment mapFragment;
     private NotificationManagerCompat mNotificationManagerPing, mNotificationManagerLocation;
-    private static ChildEventListener mPingListener, mUserLocationListener, mUserStatuesListener, mMessageListener;
+    private static ChildEventListener mPingListener, mUserLocationListener, mUserStatuesListener, mMessageListener, test;
     private ArrayList<Marker> mForeignUserLocation = new ArrayList<>();
     private String mUserFirstName;
     private String mUserLastName;
@@ -86,7 +86,7 @@ public class MainActivity extends AppCompatActivity
 
     TextView mNDUserName, mNDEmail;
 
-    private static DatabaseReference mRootRef, rootMessageRef, mDatabase, mUserLocationDataBase, userInfoRef;
+    private static DatabaseReference mRootRef, rootMessageRef, mDatabase, mUserLocationDataBase, userInfoRef, messageRef;
 
     private MapController mapController;
 
@@ -410,13 +410,13 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, String s) {
                 Log.v("TEST1","mMessageListener Working");
-                DatabaseReference messageRef = dataSnapshot.getRef();
+                messageRef = dataSnapshot.getRef();
 
-                ChildEventListener test = messageRef.limitToLast(1).addChildEventListener(new ChildEventListener() {
+                test = messageRef.limitToLast(1).addChildEventListener(new ChildEventListener() {
 
                     @Override
                     public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                        if (count > 1) {
+                        if (count > 0) {
                             String fromUserUID, message, fromUserName;
 
                             Messages messages = dataSnapshot.getValue(Messages.class);
@@ -424,11 +424,14 @@ public class MainActivity extends AppCompatActivity
                             message = messages.getMessage();
                             fromUserName = messages.getFromName();
 
-                            if (!fromUserUID.equals(mUserUID)) {
-                                sendNotificationChatChannel(R.drawable.ic_menu_message,
-                                        message, "New message from " + fromUserName,
-                                        fromUserName, fromUserUID);
+                            if(mUserUID != null && fromUserUID != null){
+                                if (!fromUserUID.equals(mUserUID)) {
+                                    sendNotificationChatChannel(R.drawable.ic_menu_message,
+                                            message, "New message from " + fromUserName,
+                                            fromUserName, fromUserUID);
+                                }
                             }
+
                         } else {
                             count++;
                         }
@@ -456,7 +459,7 @@ public class MainActivity extends AppCompatActivity
 
                     }
                 });
-                messageRef.removeEventListener(test);
+
 
             }
 
@@ -514,6 +517,7 @@ public class MainActivity extends AppCompatActivity
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setCategory(NotificationCompat.CATEGORY_EVENT)
                 .setContentIntent(resultPendingIntent)
+                .setAutoCancel(true)
                 .build();
         mNotificationManagerPing.notify(1, notification);
     }
@@ -760,6 +764,7 @@ public class MainActivity extends AppCompatActivity
     protected void onPause() {
         super.onPause();
         rootMessageRef.removeEventListener(mMessageListener);
+        messageRef.removeEventListener(test);
         mDatabase.removeEventListener(mPingListener);
         mUserLocationDataBase.removeEventListener(mUserLocationListener);
         userInfoRef.removeEventListener(mUserStatuesListener);
@@ -770,6 +775,7 @@ public class MainActivity extends AppCompatActivity
     protected void onStop() {
         super.onStop();
         rootMessageRef.removeEventListener(mMessageListener);
+        messageRef.removeEventListener(test);
         mDatabase.removeEventListener(mPingListener);
         mUserLocationDataBase.removeEventListener(mUserLocationListener);
         userInfoRef.removeEventListener(mUserStatuesListener);
@@ -825,6 +831,7 @@ public class MainActivity extends AppCompatActivity
         }
 
         rootMessageRef.removeEventListener(mMessageListener);
+        messageRef.removeEventListener(test);
         mDatabase.removeEventListener(mPingListener);
         mUserLocationDataBase.removeEventListener(mUserLocationListener);
         userInfoRef.removeEventListener(mUserStatuesListener);
