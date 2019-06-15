@@ -75,7 +75,7 @@ public class MainActivity extends AppCompatActivity
     private LocationRequest mLocationRequest;
     private SupportMapFragment mapFragment;
     private NotificationManagerCompat mNotificationManagerPing, mNotificationManagerLocation;
-    private ChildEventListener mPingListener, mUserLocationListener, mUserStatuesListener, mMessageListener;
+    private static ChildEventListener mPingListener, mUserLocationListener, mUserStatuesListener, mMessageListener;
     private ArrayList<Marker> mForeignUserLocation = new ArrayList<>();
     private String mUserFirstName;
     private String mUserLastName;
@@ -86,7 +86,7 @@ public class MainActivity extends AppCompatActivity
 
     TextView mNDUserName, mNDEmail;
 
-    private DatabaseReference mRootRef;
+    private static DatabaseReference mRootRef, rootMessageRef, mDatabase, mUserLocationDataBase, userInfoRef;
 
     private MapController mapController;
 
@@ -180,13 +180,14 @@ public class MainActivity extends AppCompatActivity
         });
 
         mNotificationManagerPing = NotificationManagerCompat.from(this);
-        DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference("Ping-Details");
+        mDatabase = FirebaseDatabase.getInstance().getReference("Ping-Details");
 
         mPingListener = mDatabase.addChildEventListener(new ChildEventListener() { //attach listener
 
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, String prevChildKey) { //something changed!
 
+                Log.v("TEST1","mPingListener Working");
 
                 final String description;
                 final String imageId;
@@ -273,14 +274,15 @@ public class MainActivity extends AppCompatActivity
             }
 
         });
-        mDatabase.addChildEventListener(mPingListener);
 
-        DatabaseReference mUserLocationDataBase = FirebaseDatabase.getInstance().getReference("User-Location");
+        mUserLocationDataBase = FirebaseDatabase.getInstance().getReference("User-Location");
 
         mUserLocationListener = mUserLocationDataBase.addChildEventListener(new ChildEventListener() { //attach listener
 
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, String prevChildKey) { //something changed!
+
+                Log.v("TEST1","mUserLocationListener Working");
 
                 final String uuid = dataSnapshot.getKey();
                 final double lat, lng;
@@ -351,13 +353,12 @@ public class MainActivity extends AppCompatActivity
             }
 
         });
-        mUserLocationDataBase.addChildEventListener(mUserLocationListener);
 
-        DatabaseReference userInfo = FirebaseDatabase
+        userInfoRef = FirebaseDatabase
                 .getInstance()
                 .getReference("Users");
 
-        mUserStatuesListener = userInfo.addChildEventListener(new ChildEventListener() {
+        mUserStatuesListener = userInfoRef.addChildEventListener(new ChildEventListener() {
 
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, String prevChildKey) {
@@ -370,6 +371,7 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                Log.v("TEST1","mUserStatuesListener Working");
                 String userState, uuid;
                 uuid = dataSnapshot.getKey();
                 userState = (String) dataSnapshot.child("userState").child("state").getValue();
@@ -399,18 +401,18 @@ public class MainActivity extends AppCompatActivity
 
             }
         });
-        userInfo.addChildEventListener(mUserStatuesListener);
 
-        DatabaseReference rootMessageRef = FirebaseDatabase.getInstance().getReference("Messages/" + mUserUID);
+        rootMessageRef = FirebaseDatabase.getInstance().getReference("Messages/" + mUserUID);
 
         mMessageListener = rootMessageRef.addChildEventListener(new ChildEventListener() {
             int count = 0;
 
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, String s) {
+                Log.v("TEST1","mMessageListener Working");
                 DatabaseReference messageRef = dataSnapshot.getRef();
 
-                messageRef.limitToLast(1).addChildEventListener(new ChildEventListener() {
+                ChildEventListener test = messageRef.limitToLast(1).addChildEventListener(new ChildEventListener() {
 
                     @Override
                     public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
@@ -454,7 +456,7 @@ public class MainActivity extends AppCompatActivity
 
                     }
                 });
-
+                messageRef.removeEventListener(test);
 
             }
 
@@ -478,7 +480,6 @@ public class MainActivity extends AppCompatActivity
 
             }
         });
-        rootMessageRef.addChildEventListener(mMessageListener);
     }
 
 
@@ -521,7 +522,6 @@ public class MainActivity extends AppCompatActivity
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         mMap.getUiSettings().setZoomControlsEnabled(true);
-        mMap.animateCamera(CameraUpdateFactory.zoomTo(11));
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission
                 (this, Manifest.permission.ACCESS_COARSE_LOCATION)
@@ -561,14 +561,19 @@ public class MainActivity extends AppCompatActivity
                 .build();
         mGoogleApiClient.connect();
     }
-
+    boolean flag = true;
     @Override
     public void onLocationChanged(Location location) {
         mLastLocation = location;
 
         LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
 
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+        if(flag) {
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+            mMap.animateCamera(CameraUpdateFactory.zoomTo(11));
+            flag = false;
+        }
+
         mapController.trackUserLocation(latLng);
         if (mUserMarker != null) {
             mUserMarker.remove();
@@ -698,6 +703,7 @@ public class MainActivity extends AppCompatActivity
             drawer.closeDrawer(GravityCompat.START);
         } else {
             super.onBackPressed();
+            updateUserStatus("offline");
         }
     }
 
@@ -750,6 +756,30 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        rootMessageRef.removeEventListener(mMessageListener);
+        mDatabase.removeEventListener(mPingListener);
+        mUserLocationDataBase.removeEventListener(mUserLocationListener);
+        userInfoRef.removeEventListener(mUserStatuesListener);
+        updateUserStatus("offline");
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        rootMessageRef.removeEventListener(mMessageListener);
+        mDatabase.removeEventListener(mPingListener);
+        mUserLocationDataBase.removeEventListener(mUserLocationListener);
+        userInfoRef.removeEventListener(mUserStatuesListener);
+        updateUserStatus("offline");
+    }
+    @Override
+    public void onResume(){
+        super.onResume();
+    }
+
     private void updateUserStatus(String state) {
         String saveCurrentTime, saveCurrentDate;
 
@@ -793,6 +823,11 @@ public class MainActivity extends AppCompatActivity
         if (mUserUID != null) {
             updateUserStatus("offline");
         }
+
+        rootMessageRef.removeEventListener(mMessageListener);
+        mDatabase.removeEventListener(mPingListener);
+        mUserLocationDataBase.removeEventListener(mUserLocationListener);
+        userInfoRef.removeEventListener(mUserStatuesListener);
     }
 
     private void VerifyUserExistance() {
