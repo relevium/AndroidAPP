@@ -8,9 +8,11 @@ import android.app.TaskStackBuilder;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -71,6 +73,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -575,9 +578,9 @@ public class MainActivity extends AppCompatActivity
                 );
                 foreignUserLocation.setTag("UserLocationMarker");
                 if (uuid.equals(mUserUID)) {
-                    if(image.equals("anonymous")){
+                    if (image.equals("anonymous")) {
                         mUserAnnonmoysMarker = foreignUserLocation;
-                    }else{
+                    } else {
                         mUserMarker = foreignUserLocation;
                     }
                 }
@@ -624,9 +627,9 @@ public class MainActivity extends AppCompatActivity
                         .transform(new BubbleTransformation(20))
                         .into(preLoadTarget);
                 if (uuid.equals(mUserUID)) {
-                    if(image.equals("anonymous")){
+                    if (image.equals("anonymous")) {
                         mUserAnnonmoysMarker = tempMarker;
-                    }else{
+                    } else {
                         mUserMarker = tempMarker;
                     }
                 }
@@ -767,15 +770,13 @@ public class MainActivity extends AppCompatActivity
         if (mAnonymityPreference) {
             if (mUserMarker != null) {
                 mUserMarker.setPosition(latLng);
-            }
-            else{
+            } else {
                 picassoLoader(latLng, mUserFirstName, mUserLastName, mUserUID, "anonymous");
             }
         } else {
             if (mUserMarker != null) {
                 mUserMarker.setPosition(latLng);
-            }
-            else{
+            } else {
                 picassoLoader(latLng, mUserFirstName, mUserLastName, mUserUID, mImageURL);
             }
         }
@@ -944,7 +945,20 @@ public class MainActivity extends AppCompatActivity
 //            startActivity(chatActivity);
             Toast.makeText(MainActivity.this, "Coming Soon !", Toast.LENGTH_SHORT).show();
         } else if (id == R.id.nav_share) {
-            Toast.makeText(this, "Location shared!", Toast.LENGTH_SHORT).show();
+            String shareSubject = "User Location using Relevium APP";
+            String Uri = "http://maps.google.com/maps?daddr=" + mLastLocation.getLatitude() + "," + mLastLocation.getLongitude();
+            Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
+            sharingIntent.setType("text/plain");
+            sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, shareSubject);
+            sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, "My Current Location." +
+                    "\nShared using Relevium application <3.\n\n\n" + Uri);
+
+            PackageManager packageManager = getPackageManager();
+            List<ResolveInfo> activities = packageManager.queryIntentActivities(sharingIntent, 0);
+            boolean isIntentSafe = activities.size() > 0;
+            if (isIntentSafe) {
+                startActivity(Intent.createChooser(sharingIntent, "Share via"));
+            }
         } else if (id == R.id.nav_sos) {
             Toast.makeText(this, "SOS sent!", Toast.LENGTH_SHORT).show();
         } else if (id == R.id.nav_log_out) {
@@ -974,6 +988,7 @@ public class MainActivity extends AppCompatActivity
             userInfoRef.removeEventListener(mUserStatuesListener);
         }
         count = 0;
+        limit = 0;
         super.onPause();
         updateUserStatus("offline");
     }
@@ -993,6 +1008,7 @@ public class MainActivity extends AppCompatActivity
             userInfoRef.removeEventListener(mUserStatuesListener);
         }
         count = 0;
+        limit = 0;
         super.onStop();
         updateUserStatus("offline");
     }
@@ -1000,6 +1016,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onResume() {
         count = 0;
+        limit = 0;
         if (mMessageListener != null) {
             rootMessageRef.removeEventListener(mMessageListener);
         }
@@ -1055,6 +1072,7 @@ public class MainActivity extends AppCompatActivity
             userInfoRef.removeEventListener(mUserStatuesListener);
         }
         count = 0;
+        limit = 0;
         super.onStart();
 
         if (mUserUID == null) {
@@ -1086,6 +1104,7 @@ public class MainActivity extends AppCompatActivity
             userInfoRef.removeEventListener(mUserStatuesListener);
         }
         count = 0;
+        limit = 0;
         super.onDestroy();
 
         if (mUserUID != null) {
