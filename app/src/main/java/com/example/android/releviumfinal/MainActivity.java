@@ -64,11 +64,14 @@ import com.google.firebase.iid.InstanceIdResult;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
 
+import org.json.JSONObject;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.Map;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -89,8 +92,9 @@ public class MainActivity extends AppCompatActivity
     private String mUserUID, mUserEmail, mImageURL;
     private FirebaseUser mUser;
     private int count = 0;
+    private int limit = 0;
     private FirebaseAuth mUserAuth;
-    private Marker mUserMarker;
+    private Marker mUserMarker, mUserAnnonmoysMarker;
     private Boolean mAnonymityPreference;
     private Target mTarget;
 
@@ -160,7 +164,7 @@ public class MainActivity extends AppCompatActivity
                 mUserEmail = dataSnapshot.child("mEmail").getValue(String.class);
                 mImageURL = dataSnapshot.child("image").getValue(String.class);
                 mAnonymityPreference = dataSnapshot.child("AnonymityPreference").getValue(Boolean.class);
-                if(mImageURL != null){
+                if (mImageURL != null) {
                     Picasso.get().load(mImageURL).placeholder(R.drawable.ic_progress_image).into(userProfileImage);
                 }
                 String concatName = (mUserFirstName + " " + mUserLastName);
@@ -201,7 +205,7 @@ public class MainActivity extends AppCompatActivity
         mNotificationManagerPing = NotificationManagerCompat.from(this);
         mDatabase = FirebaseDatabase.getInstance().getReference("Ping-Details");
 
-        mPingListener = mDatabase.addChildEventListener(new ChildEventListener() { //attach listener
+        mPingListener = new ChildEventListener() { //attach listener
 
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, String prevChildKey) { //something changed!
@@ -292,11 +296,11 @@ public class MainActivity extends AppCompatActivity
 
             }
 
-        });
+        };
 
         mUserLocationDataBase = FirebaseDatabase.getInstance().getReference("User-Location");
 
-        mUserLocationListener = mUserLocationDataBase.addChildEventListener(new ChildEventListener() { //attach listener
+        mUserLocationListener = new ChildEventListener() { //attach listener
 
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, String prevChildKey) { //something changed!
@@ -317,6 +321,7 @@ public class MainActivity extends AppCompatActivity
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                         Boolean foreignerAnonymityPreference;
+                        boolean notFound = true;
                         final String userFirstName, userLastName, image;
                         String userState;
                         userFirstName = (String) dataSnapshot.child(uuid).child("mFirstName").getValue();
@@ -335,10 +340,26 @@ public class MainActivity extends AppCompatActivity
                         if (!foreignerAnonymityPreference || uuid.equals(mUserUID)) {
                             if (userState.equals("online")) {
                                 if (!uuid.equals(mUserUID)) {
-                                    if (image != null) {
-                                        picassoLoader(latLng,userFirstName,userLastName,uuid,image);
-                                    } else {
-                                        picassoLoader(latLng,userFirstName,userLastName,uuid,"default");
+                                    for (int i = 0; i < mForeignUserLocation.size(); i++) {
+                                        if (mForeignUserLocation.get(i).getSnippet().equals(uuid)) {
+                                            Log.v("TEST234", "found cached");
+                                            Marker temp = mForeignUserLocation.get(i);
+                                            temp.setPosition(latLng);
+                                            temp.setVisible(true);
+                                            mForeignUserLocation.add(i, temp);
+                                            notFound = false;
+                                            break;
+                                        } else {
+                                            notFound = true;
+                                        }
+
+                                    }
+                                    if (image != null && notFound) {
+                                        Log.v("TEST234", "found with image");
+                                        picassoLoader(latLng, userFirstName, userLastName, uuid, image);
+                                    } else if (notFound) {
+                                        Log.v("TEST234", "assign default");
+                                        picassoLoader(latLng, userFirstName, userLastName, uuid, "default");
                                     }
                                 }
 
@@ -365,15 +386,17 @@ public class MainActivity extends AppCompatActivity
                 lat = (double) dataSnapshot.child("l").child("0").getValue();
                 lng = (double) dataSnapshot.child("l").child("1").getValue();
 
-                LatLng latLng = new LatLng(lat,lng);
+                LatLng latLng = new LatLng(lat, lng);
 
                 for (int i = 0; i < mForeignUserLocation.size(); i++) {
-                    if (mForeignUserLocation.get(i).getSnippet().equals(uuid)) {
-                        Marker temp = mForeignUserLocation.get(i);
-                        mForeignUserLocation.get(i).remove();
-                        temp.setPosition(latLng);
-                        mForeignUserLocation.add(i,temp);
-                        break;
+                    if (!uuid.equals(mUserUID)) {
+                        if (mForeignUserLocation.get(i).getSnippet().equals(uuid)) {
+                            Log.v("TEST234", "found cached");
+                            Marker temp = mForeignUserLocation.get(i);
+                            temp.setPosition(latLng);
+                            mForeignUserLocation.add(i, temp);
+                            break;
+                        }
                     }
                 }
             }
@@ -393,13 +416,13 @@ public class MainActivity extends AppCompatActivity
 
             }
 
-        });
+        };
 
         userInfoRef = FirebaseDatabase
                 .getInstance()
                 .getReference("Users");
 
-        mUserStatuesListener = userInfoRef.addChildEventListener(new ChildEventListener() {
+        mUserStatuesListener = new ChildEventListener() {
 
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, String prevChildKey) {
@@ -422,10 +445,13 @@ public class MainActivity extends AppCompatActivity
                 }
                 if (userState.equals("offline")) {
                     for (int i = 0; i < mForeignUserLocation.size(); i++) {
-                        if (mForeignUserLocation.get(i).getSnippet().equals(uuid)) {
-                            mForeignUserLocation.get(i).remove();
-                            mForeignUserLocation.remove(i);
-                            break;
+                        if (!uuid.equals(mUserUID)) {
+                            if (mForeignUserLocation.get(i).getSnippet().equals(uuid)) {
+                                Marker temp = mForeignUserLocation.get(i);
+                                temp.setVisible(false);
+                                mForeignUserLocation.add(i, temp);
+                                break;
+                            }
                         }
                     }
 
@@ -441,23 +467,26 @@ public class MainActivity extends AppCompatActivity
             public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
 
             }
-        });
+        };
 
         rootMessageRef = FirebaseDatabase.getInstance().getReference("Messages/" + mUserUID);
 
-        mMessageListener = rootMessageRef.addChildEventListener(new ChildEventListener() {
+        mMessageListener = new ChildEventListener() {
 
 
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, String s) {
-                Log.v("TEST1", "mMessageListener Working");
+                Log.v("MN", "Parent Call");
                 messageRef = dataSnapshot.getRef();
-
+                limit++;
                 test = messageRef.limitToLast(1).addChildEventListener(new ChildEventListener() {
 
                     @Override
                     public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                        if (count > 0) {
+                        Log.v("MN", "Child Call");
+
+
+                        if (count >= limit) {
                             String fromUserUID, message, fromUserName;
 
                             Messages messages = dataSnapshot.getValue(Messages.class);
@@ -476,6 +505,8 @@ public class MainActivity extends AppCompatActivity
                         } else {
                             count++;
                         }
+                        Log.v("MN", limit + " limit count !");
+                        Log.v("MN", count + " count count !");
 
 
                     }
@@ -523,20 +554,17 @@ public class MainActivity extends AppCompatActivity
             public void onCancelled(@NonNull DatabaseError databaseError) {
 
             }
-        });
-        rootMessageRef.removeEventListener(mMessageListener);
-        mDatabase.removeEventListener(mPingListener);
-        mUserLocationDataBase.removeEventListener(mUserLocationListener);
-        userInfoRef.removeEventListener(mUserStatuesListener);
+        };
     }
 
-    public void picassoLoader(final LatLng latLng,final String userFirstName,
-                             final String userLastName,final String uuid, String image){
+    public void picassoLoader(final LatLng latLng, final String userFirstName,
+                              final String userLastName, final String uuid, final String image) {
         mTarget = new Target() {
             Marker tempMarker;
+
             @Override
             public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
-                if(tempMarker != null){
+                if (tempMarker != null) {
                     tempMarker.remove();
                 }
                 final Marker foreignUserLocation = mMap.addMarker(new MarkerOptions()
@@ -546,8 +574,12 @@ public class MainActivity extends AppCompatActivity
                         .snippet(uuid)
                 );
                 foreignUserLocation.setTag("UserLocationMarker");
-                if(uuid.equals(mUserUID)){
-                    mUserMarker = foreignUserLocation;
+                if (uuid.equals(mUserUID)) {
+                    if(image.equals("anonymous")){
+                        mUserAnnonmoysMarker = foreignUserLocation;
+                    }else{
+                        mUserMarker = foreignUserLocation;
+                    }
                 }
                 foreignUserLocation.setTag("UserLocationMarker");
                 mForeignUserLocation.add(foreignUserLocation);
@@ -562,13 +594,6 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             public void onPrepareLoad(Drawable placeHolderDrawable) {
-//                tempMarker = mMap.addMarker(new MarkerOptions()
-//                        .position(latLng)
-//                        .icon(BitmapDescriptorFactory.fromBitmap(mapController
-//                                .createCustomMarker(MainActivity.this, R.drawable.ic_person, "ForeignerUserLocationIcon")))
-//                        .title(userFirstName + " " + userLastName)
-//                        .snippet(uuid)
-//                );
                 Target preLoadTarget = new Target() {
                     @Override
                     public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
@@ -593,17 +618,21 @@ public class MainActivity extends AppCompatActivity
                     }
                 };
                 Picasso.get()
-                        .load( R.drawable.ic_person )
+                        .load(R.drawable.ic_person)
                         .resize(200, 200)
                         .centerCrop()
                         .transform(new BubbleTransformation(20))
-                        .into( preLoadTarget );
-                if(uuid.equals(mUserUID)){
-                    mUserMarker = tempMarker;
+                        .into(preLoadTarget);
+                if (uuid.equals(mUserUID)) {
+                    if(image.equals("anonymous")){
+                        mUserAnnonmoysMarker = tempMarker;
+                    }else{
+                        mUserMarker = tempMarker;
+                    }
                 }
             }
         };
-        if(image.equals("default")){
+        if (image.equals("default")) {
             Log.v("PicassoTest", "Inside the function as default");
             Picasso.get()
                     .load(R.drawable.ic_person)
@@ -611,17 +640,15 @@ public class MainActivity extends AppCompatActivity
                     .centerCrop()
                     .transform(new BubbleTransformation(20))
                     .into(mTarget);
-        }
-        else if(image.equals("anonymous")){
+        } else if (image.equals("anonymous")) {
             Log.v("PicassoTest", "Inside the function as anonymous");
             Picasso.get()
                     .load(R.drawable.ic_action_name)
                     .resize(200, 200)
                     .centerCrop()
-                    .transform(new BubbleTransformation(20,"#505050"))
+                    .transform(new BubbleTransformation(20, "#505050"))
                     .into(mTarget);
-        }
-        else{
+        } else {
             Log.v("PicassoTest", "Inside the function as url");
             Picasso.get()
                     .load(image)
@@ -729,9 +756,6 @@ public class MainActivity extends AppCompatActivity
         }
 
         mapController.trackUserLocation(latLng);
-        if (mUserMarker != null) {
-            mUserMarker.remove();
-        }
 
         if (mImageURL == null) {
             mImageURL = "default";
@@ -741,9 +765,19 @@ public class MainActivity extends AppCompatActivity
             mAnonymityPreference = false;
         }
         if (mAnonymityPreference) {
-            picassoLoader(latLng,mUserFirstName,mUserLastName,mUserUID,"anonymous");
+            if (mUserMarker != null) {
+                mUserMarker.setPosition(latLng);
+            }
+            else{
+                picassoLoader(latLng, mUserFirstName, mUserLastName, mUserUID, "anonymous");
+            }
         } else {
-            picassoLoader(latLng,mUserFirstName,mUserLastName,mUserUID,mImageURL);
+            if (mUserMarker != null) {
+                mUserMarker.setPosition(latLng);
+            }
+            else{
+                picassoLoader(latLng, mUserFirstName, mUserLastName, mUserUID, mImageURL);
+            }
         }
 
 
@@ -913,8 +947,7 @@ public class MainActivity extends AppCompatActivity
             Toast.makeText(this, "Location shared!", Toast.LENGTH_SHORT).show();
         } else if (id == R.id.nav_sos) {
             Toast.makeText(this, "SOS sent!", Toast.LENGTH_SHORT).show();
-        }
-        else if (id == R.id.nav_log_out){
+        } else if (id == R.id.nav_log_out) {
             updateUserStatus("offline");
             Intent loginIntent = new Intent(MainActivity.this, LoginActivity.class);
             loginIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -928,36 +961,62 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onPause() {
-        super.onPause();
-        rootMessageRef.removeEventListener(mMessageListener);
-        if(messageRef != null){
-            messageRef.removeEventListener(test);
+        if (mMessageListener != null) {
+            rootMessageRef.removeEventListener(mMessageListener);
         }
-        mDatabase.removeEventListener(mPingListener);
-        mUserLocationDataBase.removeEventListener(mUserLocationListener);
-        userInfoRef.removeEventListener(mUserStatuesListener);
-        updateUserStatus("offline");
+        if (mPingListener != null) {
+            mDatabase.removeEventListener(mPingListener);
+        }
+        if (mUserLocationListener != null) {
+            mUserLocationDataBase.removeEventListener(mUserLocationListener);
+        }
+        if (mUserStatuesListener != null) {
+            userInfoRef.removeEventListener(mUserStatuesListener);
+        }
         count = 0;
+        super.onPause();
+        updateUserStatus("offline");
     }
 
     @Override
     protected void onStop() {
-        super.onStop();
-        rootMessageRef.removeEventListener(mMessageListener);
-        if(messageRef != null){
-            messageRef.removeEventListener(test);
+        if (mMessageListener != null) {
+            rootMessageRef.removeEventListener(mMessageListener);
         }
-        mDatabase.removeEventListener(mPingListener);
-        mUserLocationDataBase.removeEventListener(mUserLocationListener);
-        userInfoRef.removeEventListener(mUserStatuesListener);
-        updateUserStatus("offline");
+        if (mPingListener != null) {
+            mDatabase.removeEventListener(mPingListener);
+        }
+        if (mUserLocationListener != null) {
+            mUserLocationDataBase.removeEventListener(mUserLocationListener);
+        }
+        if (mUserStatuesListener != null) {
+            userInfoRef.removeEventListener(mUserStatuesListener);
+        }
         count = 0;
+        super.onStop();
+        updateUserStatus("offline");
     }
 
     @Override
     public void onResume() {
-        super.onResume();
         count = 0;
+        if (mMessageListener != null) {
+            rootMessageRef.removeEventListener(mMessageListener);
+        }
+        if (mPingListener != null) {
+            mDatabase.removeEventListener(mPingListener);
+        }
+        if (mUserLocationListener != null) {
+            mUserLocationDataBase.removeEventListener(mUserLocationListener);
+        }
+        if (mUserStatuesListener != null) {
+            userInfoRef.removeEventListener(mUserStatuesListener);
+        }
+        rootMessageRef.addChildEventListener(mMessageListener);
+        mDatabase.addChildEventListener(mPingListener);
+        mUserLocationDataBase.addChildEventListener(mUserLocationListener);
+        userInfoRef.addChildEventListener(mUserStatuesListener);
+        super.onResume();
     }
 
     private void updateUserStatus(String state) {
@@ -983,6 +1042,19 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onStart() {
+        if (mMessageListener != null) {
+            rootMessageRef.removeEventListener(mMessageListener);
+        }
+        if (mPingListener != null) {
+            mDatabase.removeEventListener(mPingListener);
+        }
+        if (mUserLocationListener != null) {
+            mUserLocationDataBase.removeEventListener(mUserLocationListener);
+        }
+        if (mUserStatuesListener != null) {
+            userInfoRef.removeEventListener(mUserStatuesListener);
+        }
+        count = 0;
         super.onStart();
 
         if (mUserUID == null) {
@@ -994,29 +1066,31 @@ public class MainActivity extends AppCompatActivity
 
             VerifyUserExistence();
         }
-        count = 0;
-        rootMessageRef.addChildEventListener(mMessageListener);
-        mDatabase.addChildEventListener(mPingListener);
-        mUserLocationDataBase.addChildEventListener(mUserLocationListener);
-        userInfoRef.addChildEventListener(mUserStatuesListener);
     }
 
     @Override
     protected void onDestroy() {
+        if (mMessageListener != null) {
+            rootMessageRef.removeEventListener(mMessageListener);
+        }
+        if (test != null) {
+            messageRef.removeEventListener(test);
+        }
+        if (mPingListener != null) {
+            mDatabase.removeEventListener(mPingListener);
+        }
+        if (mUserLocationListener != null) {
+            mUserLocationDataBase.removeEventListener(mUserLocationListener);
+        }
+        if (mUserStatuesListener != null) {
+            userInfoRef.removeEventListener(mUserStatuesListener);
+        }
+        count = 0;
         super.onDestroy();
 
         if (mUserUID != null) {
             updateUserStatus("offline");
         }
-
-        rootMessageRef.removeEventListener(mMessageListener);
-        if(messageRef != null){
-            messageRef.removeEventListener(test);
-        }
-        mDatabase.removeEventListener(mPingListener);
-        mUserLocationDataBase.removeEventListener(mUserLocationListener);
-        userInfoRef.removeEventListener(mUserStatuesListener);
-        count = 0;
     }
 
     private void VerifyUserExistence() {
