@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -17,7 +18,7 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
-public class LoginActivity extends AppCompatActivity implements View.OnClickListener{
+public class LoginActivity extends AppCompatActivity implements View.OnClickListener {
 
     //Initialize xml intractable variables
     private Button loginBtn;
@@ -34,6 +35,14 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        mAuth = FirebaseAuth.getInstance();
+        if (mAuth.getCurrentUser() != null) {
+            // User is signed in (getCurrentUser() will be null if not signed in)
+            Intent mainActivity = new Intent(LoginActivity.this, MainActivity.class);
+            mainActivity.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(mainActivity);
+            finish();
+        }
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         FirebaseApp.initializeApp(this);
@@ -48,21 +57,22 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
         loadingBar = new ProgressDialog(LoginActivity.this);
 
-        mAuth = FirebaseAuth.getInstance();
         //Set onClick listener for each button
         loginBtn.setOnClickListener(this);
         registerBtn.setOnClickListener(this);
     }
 
-    private void loginUser(){
+    private void loginUser() {
 
         final String userName = userNameEdt.getText().toString().trim();
-        String password = passwordEdt.getText().toString().trim();
+        final String password = passwordEdt.getText().toString().trim();
         loadingBar.setTitle("Logging-in");
         loadingBar.setMessage("Logging you in, this may take a moment.");
         loadingBar.setCanceledOnTouchOutside(false);
-        loadingBar.show();
-        if( !(userName.isEmpty() && password.isEmpty()) )
+        Log.v("TEST", !(userName.isEmpty() && password.isEmpty())+" And check");
+        Log.v("TEST", !(userName.isEmpty() || password.isEmpty())+" Or check");
+        if (!(userName.isEmpty() && password.isEmpty()) && !(userName.isEmpty() || password.isEmpty())) {
+            loadingBar.show();
             mAuth.signInWithEmailAndPassword(userName, password)
                     .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                         @Override
@@ -85,6 +95,16 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                             // ...
                         }
                     });
+        }
+        else if(userName.isEmpty() && password.isEmpty()){
+            Toast.makeText(this, "You must enter a username and a password", Toast.LENGTH_SHORT).show();
+        }
+        else if(userName.isEmpty()){
+            Toast.makeText(this, "You must enter a username", Toast.LENGTH_SHORT).show();
+        }
+        else{
+            Toast.makeText(this, "You must enter a password", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
@@ -95,7 +115,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 break;
             case R.id.register:
                 Intent registerActivity = new Intent(LoginActivity.this, RegisterActivity.class);
-                registerActivity.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                 startActivity(registerActivity);
                 break;
 

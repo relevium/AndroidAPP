@@ -899,10 +899,7 @@ public class MainActivity extends AppCompatActivity
             drawer.closeDrawer(GravityCompat.START);
         } else {
             super.onBackPressed();
-            updateUserStatus("offline");
-            Intent loginIntent = new Intent(MainActivity.this, LoginActivity.class);
-            loginIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(loginIntent);
+            moveTaskToBack(true);
         }
     }
 
@@ -962,6 +959,7 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_sos) {
             Toast.makeText(this, "SOS sent!", Toast.LENGTH_SHORT).show();
         } else if (id == R.id.nav_log_out) {
+            FirebaseAuth.getInstance().signOut();
             updateUserStatus("offline");
             Intent loginIntent = new Intent(MainActivity.this, LoginActivity.class);
             loginIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);

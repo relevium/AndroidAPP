@@ -19,6 +19,7 @@
     <EditText
         android:layout_width="300dp"
         android:layout_height="wrap_content"
+        android:maxLength="30"
         android:inputType="textEmailAddress"
         android:id="@+id/username"
         android:hint="@string/email_hint"
@@ -33,6 +34,7 @@
         android:layout_height="wrap_content"
         android:inputType="textPassword"
         android:id="@+id/password"
+        android:maxLength="20"
         android:hint="@string/password_hint"
         android:gravity="center"
         android:background="@drawable/rounded_corners_edit_text"
