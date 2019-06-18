@@ -220,6 +220,7 @@ public class ChatActivity extends AppCompatActivity {
             Map messageTextBody = new HashMap();
             messageTextBody.put("message", messageText);
             messageTextBody.put("fromName", messageSenderName);
+            messageTextBody.put("toName", messageReceiverName);
             messageTextBody.put("from", messageSenderID);
             messageTextBody.put("type", "text");
             messageTextBody.put("to", messageReceiverID);

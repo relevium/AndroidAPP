@@ -2,9 +2,11 @@ package com.example.android.releviumfinal;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.TaskStackBuilder;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
@@ -12,7 +14,6 @@ import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -29,7 +30,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -66,7 +66,6 @@ import com.google.firebase.iid.InstanceIdResult;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
 
-import org.json.JSONObject;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -74,8 +73,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
 import de.hdodenhof.circleimageview.CircleImageView;
 
 public class MainActivity extends AppCompatActivity
@@ -97,7 +94,7 @@ public class MainActivity extends AppCompatActivity
     private int count = 0;
     private int limit = 0;
     private FirebaseAuth mUserAuth;
-    private Marker mUserMarker, mUserAnnonmoysMarker;
+    private Marker mUserMarker, mUserAnonymousMarker;
     private Boolean mAnonymityPreference;
     private Target mTarget;
 
@@ -119,11 +116,26 @@ public class MainActivity extends AppCompatActivity
     private static final int FIRE_IMAGE_ID = 2;
     private static final int WARNING_IMAGE_ID = 3;
 
+    public static boolean isMyServiceRunning(Activity activity, Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) activity.getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        startService(new Intent(this, LocationService.class));
+        try {
+            startService(new Intent(MainActivity.this, LocationService.class));
+        }catch (Exception e){
+            Log.v("Test", "Failed to terminate the service.");
+        }
+
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -172,6 +184,13 @@ public class MainActivity extends AppCompatActivity
                     Picasso.get().load(mImageURL).placeholder(R.drawable.ic_progress_image).into(userProfileImage);
                 }
                 String concatName = (mUserFirstName + " " + mUserLastName);
+                if(mUserAnonymousMarker != null){
+                    mUserAnonymousMarker.setTitle(concatName);
+                }
+                if(mUserMarker != null){
+                    mUserMarker.setTitle(concatName);
+                }
+
                 mNDUserName.setText(concatName);
                 mNDEmail.setText(mUserEmail);
             }
@@ -580,7 +599,7 @@ public class MainActivity extends AppCompatActivity
                 foreignUserLocation.setTag("UserLocationMarker");
                 if (uuid.equals(mUserUID)) {
                     if (image.equals("anonymous")) {
-                        mUserAnnonmoysMarker = foreignUserLocation;
+                        mUserAnonymousMarker = foreignUserLocation;
                     } else {
                         mUserMarker = foreignUserLocation;
                     }
@@ -629,7 +648,7 @@ public class MainActivity extends AppCompatActivity
                         .into(preLoadTarget);
                 if (uuid.equals(mUserUID)) {
                     if (image.equals("anonymous")) {
-                        mUserAnnonmoysMarker = tempMarker;
+                        mUserAnonymousMarker = tempMarker;
                     } else {
                         mUserMarker = tempMarker;
                     }
@@ -769,8 +788,8 @@ public class MainActivity extends AppCompatActivity
             mAnonymityPreference = false;
         }
         if (mAnonymityPreference) {
-            if (mUserMarker != null) {
-                mUserMarker.setPosition(latLng);
+            if (mUserAnonymousMarker != null) {
+                mUserAnonymousMarker.setPosition(latLng);
             } else {
                 picassoLoader(latLng, mUserFirstName, mUserLastName, mUserUID, "anonymous");
             }
@@ -961,6 +980,15 @@ public class MainActivity extends AppCompatActivity
             Toast.makeText(this, "SOS sent!", Toast.LENGTH_SHORT).show();
         } else if (id == R.id.nav_log_out) {
             FirebaseAuth.getInstance().signOut();
+            if(isMyServiceRunning(MainActivity.this, LocationService.class)){
+                try{
+                    Log.i("Service Terminator", "Service Terminated.");
+                    stopService(new Intent(MainActivity.this, LocationService.class));
+                }catch (Exception ex){
+                    Log.e("Service Terminator", "Failed to stop service!");
+                }
+
+            }
             updateUserStatus("offline");
             Intent loginIntent = new Intent(MainActivity.this, LoginActivity.class);
             loginIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -1104,12 +1132,15 @@ public class MainActivity extends AppCompatActivity
         }
         count = 0;
         limit = 0;
+
+
         super.onDestroy();
 
         if (mUserUID != null) {
             updateUserStatus("offline");
         }
         mGoogleApiClient.disconnect();
+
     }
 
     private void VerifyUserExistence() {

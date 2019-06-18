@@ -90,7 +90,7 @@ public class ClientMessageAdapter extends RecyclerView.Adapter<ClientMessageAdap
                 {
                     String receiverImage = dataSnapshot.child("image").getValue().toString();
 
-                    Picasso.get().load(receiverImage).placeholder(R.drawable.ic_default_profile_pic).into(messageViewHolder.receiverProfileImage);
+                    Picasso.get().load(receiverImage).placeholder(R.drawable.ic_person).into(messageViewHolder.receiverProfileImage);
                 }
             }
 

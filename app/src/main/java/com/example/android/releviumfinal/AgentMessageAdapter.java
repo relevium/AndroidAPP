@@ -9,6 +9,8 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.squareup.picasso.Picasso;
+
 import java.util.List;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -90,6 +92,7 @@ public class AgentMessageAdapter extends RecyclerView.Adapter<AgentMessageAdapte
                 messageViewHolder.receiverMessageText.setVisibility(View.VISIBLE);
 
                 messageViewHolder.receiverMessageText.setBackgroundResource(R.drawable.receiver_messages);
+                Picasso.get().load(R.drawable.relevium).placeholder(R.drawable.ic_person).into(messageViewHolder.receiverProfileImage);
                 messageViewHolder.receiverMessageText.setTextColor(Color.BLACK);
                 messageViewHolder.receiverMessageText.setText(messages.getMessage() + "\n \n" + messages.getTime() + " - " + messages.getDate());
             }

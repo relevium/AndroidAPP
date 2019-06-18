@@ -4,7 +4,6 @@ import android.annotation.TargetApi;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -19,12 +18,19 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
+import com.firebase.geofire.GeoFire;
+import com.firebase.geofire.GeoLocation;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
 
 public class LocationService extends Service {
     private static final String TAG = "MyLocationService";
     private LocationManager mLocationManager = null;
     private static final int LOCATION_INTERVAL = 1000;
-    private static final float LOCATION_DISTANCE = 1000f;
+    private static final float LOCATION_DISTANCE = 1000;
 
     private static final int NOTIF_ID = 1;
     private static final String NOTIF_CHANNEL_ID = "Channel_Id";
@@ -39,9 +45,32 @@ public class LocationService extends Service {
 
         @Override
         public void onLocationChanged(Location location) {
-            Log.e(TAG, "onLocationChanged: " + location);
-            Log.e(TAG, "Providers: " + mLocationManager.getProvider(LocationManager.GPS_PROVIDER).toString());
+            Log.e(TAG, "onLocationChanged: " + location + " Provider: "+location.getProvider());
+
+            Log.e(TAG, "onLocationChanged: " + location.distanceTo(mLastLocation));
             mLastLocation.set(location);
+            Log.e(TAG, FirebaseAuth.getInstance().getCurrentUser()== null ? "Yes": "No");
+            if( mLastLocation.getProvider().equals("gps")) {
+                Log.e(TAG, FirebaseAuth.getInstance().getCurrentUser()== null ? "Yes": "No");
+                if (FirebaseAuth.getInstance().getCurrentUser() != null) {
+                    Log.e(TAG, "onLocationChanged: " + location);
+                    Log.e(TAG, "Provider: " + location.getProvider());
+                    String userUID = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                    DatabaseReference geoFireLocations = FirebaseDatabase.getInstance().getReference("User-Location");
+                    GeoFire geoFire = new GeoFire(geoFireLocations);
+                    geoFire.setLocation(userUID, new GeoLocation(location.getLatitude(), location.getLongitude()), new
+                            GeoFire.CompletionListener() {
+                                @Override
+                                public void onComplete(String key, DatabaseError error) {
+                                    //Do some stuff if you want to
+                                }
+                            });
+
+                } else {
+                    Log.e(TAG, "Destroying");
+                    stopSelf();
+                }
+            }
         }
 
         @Override
@@ -77,7 +106,7 @@ public class LocationService extends Service {
             startMyOwnForeground();
         } else {
             Log.e(TAG, "Lower than oreo");
-           // startForeground();
+            startForeground();
         }
         super.onStartCommand(intent, flags, startId);
         return START_STICKY;
@@ -111,7 +140,7 @@ public class LocationService extends Service {
         Notification notification = notificationBuilder.setOngoing(true)
                 .setSmallIcon(R.drawable.relevium)
                 .setContentTitle("Service is running in background")
-                .setPriority(NotificationManager.IMPORTANCE_MIN)
+                .setPriority(NotificationManager.IMPORTANCE_NONE)
                 .setCategory(Notification.CATEGORY_SERVICE)
                 .setVisibility(Notification.VISIBILITY_SECRET)
                 .build();
@@ -139,11 +168,6 @@ public class LocationService extends Service {
         }
     }
 
-    @Override
-    public boolean onUnbind(Intent intent) {
-        Log.e(TAG, "onUnbind");
-        return super.onUnbind(intent);
-    }
 
     @Override
     public void onDestroy() {
