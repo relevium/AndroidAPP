@@ -11,7 +11,7 @@
         <item
             android:id="@+id/nav_chat"
             android:icon="@drawable/ic_menu_message"
-            android:title="Send message" />
+            android:title="Chat History" />
         <item
             android:id="@+id/nav_account"
             android:icon="@drawable/ic_menu_account"

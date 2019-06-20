@@ -132,6 +132,7 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         try {
             startService(new Intent(MainActivity.this, LocationService.class));
+            startService(new Intent(MainActivity.this, CleanService.class));
         }catch (Exception e){
             Log.v("Test", "Failed to terminate the service.");
         }
@@ -958,9 +959,8 @@ public class MainActivity extends AppCompatActivity
             Intent profileActivity = new Intent(this, ProfileActivity.class);
             startActivity(profileActivity);
         } else if (id == R.id.nav_chat) {
-//            Intent chatActivity = new Intent(this, ChatActivity.class);
-//            startActivity(chatActivity);
-            Toast.makeText(MainActivity.this, "Coming Soon !", Toast.LENGTH_SHORT).show();
+           Intent chatHistoryActivity = new Intent(this, ChatHistoryActivity.class);
+           startActivity(chatHistoryActivity);
         } else if (id == R.id.nav_share) {
             String shareSubject = "User Location using Relevium APP";
             String Uri = "http://maps.google.com/maps?daddr=" + mLastLocation.getLatitude() + "," + mLastLocation.getLongitude();
@@ -989,7 +989,6 @@ public class MainActivity extends AppCompatActivity
                 }
 
             }
-            updateUserStatus("offline");
             Intent loginIntent = new Intent(MainActivity.this, LoginActivity.class);
             loginIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(loginIntent);
@@ -1017,7 +1016,6 @@ public class MainActivity extends AppCompatActivity
         count = 0;
         limit = 0;
         super.onPause();
-        updateUserStatus("offline");
     }
 
     @Override
@@ -1037,7 +1035,6 @@ public class MainActivity extends AppCompatActivity
         count = 0;
         limit = 0;
         super.onStop();
-        updateUserStatus("offline");
     }
 
     @Override
@@ -1136,9 +1133,7 @@ public class MainActivity extends AppCompatActivity
 
         super.onDestroy();
 
-        if (mUserUID != null) {
-            updateUserStatus("offline");
-        }
+
         mGoogleApiClient.disconnect();
 
     }
