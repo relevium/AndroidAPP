@@ -11,11 +11,11 @@
         <item
             android:id="@+id/nav_chat"
             android:icon="@drawable/ic_menu_message"
-            android:title="Send message" />
+            android:title="Chat History" />
         <item
             android:id="@+id/nav_account"
             android:icon="@drawable/ic_menu_account"
-            android:title="Account" />
+            android:title="Profile Settings" />
     </group>
 
     <item android:title="Communicate">
@@ -25,9 +25,9 @@
                 android:icon="@drawable/ic_menu_share"
                 android:title="Share location" />
             <item
-                android:id="@+id/nav_sos"
-                android:icon="@drawable/ic_menu_sos"
-                android:title="SOS" />
+                android:id="@+id/nav_log_out"
+                android:icon="@drawable/ic_menu_exit"
+                android:title="Log out" />
         </menu>
     </item>
 

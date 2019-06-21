@@ -1,5 +1,4 @@
 # Relevium android application
---
 
 
 | SDK                                     | Languages                          | Build status                             |

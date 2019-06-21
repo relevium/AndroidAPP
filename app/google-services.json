@@ -21,6 +21,10 @@
             "package_name": "com.example.android.releviumfinal",
             "certificate_hash": "133573f3ad977f3f40de600a6b0d2a2014b45159"
           }
+        },
+        {
+          "client_id": "368068779189-62ih1cgetv94ovp1fkfi3o95kssknbam.apps.googleusercontent.com",
+          "client_type": 3
         }
       ],
       "api_key": [
@@ -34,6 +38,13 @@
             {
               "client_id": "368068779189-62ih1cgetv94ovp1fkfi3o95kssknbam.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "368068779189-haem88amh4dnmb75sl7kq9fscrmn41r7.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.MrRadix.ReleviumApp"
+              }
             }
           ]
         }
@@ -54,6 +65,10 @@
             "package_name": "com.example.geolocation",
             "certificate_hash": "133573f3ad977f3f40de600a6b0d2a2014b45159"
           }
+        },
+        {
+          "client_id": "368068779189-62ih1cgetv94ovp1fkfi3o95kssknbam.apps.googleusercontent.com",
+          "client_type": 3
         }
       ],
       "api_key": [
@@ -67,6 +82,13 @@
             {
               "client_id": "368068779189-62ih1cgetv94ovp1fkfi3o95kssknbam.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "368068779189-haem88amh4dnmb75sl7kq9fscrmn41r7.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.MrRadix.ReleviumApp"
+              }
             }
           ]
         }

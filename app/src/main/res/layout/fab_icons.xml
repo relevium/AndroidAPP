@@ -51,6 +51,15 @@
         fab:menu_fab_label="Select a pointer"
         fab:menu_fab_show_animation="@anim/show_from_bottom"
         fab:menu_fab_hide_animation="@anim/hide_to_bottom">
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fab_pin"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_sos"
+            fab:fab_colorPressed="#426fff"
+            fab:fab_colorNormal="#284ae0"
+            fab:fab_size="mini"
+            fab:fab_label="SOS" />
 
         <com.github.clans.fab.FloatingActionButton
             android:id="@+id/fab_warning"
@@ -61,25 +70,8 @@
             fab:fab_colorNormal="#284ae0"
             fab:fab_size="mini"
             fab:fab_label="Warning!" />
-        <com.github.clans.fab.FloatingActionButton
-            android:id="@+id/fab_fire"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_fab_fire"
-            fab:fab_colorPressed="#426fff"
-            fab:fab_colorNormal="#284ae0"
-            fab:fab_size="mini"
-            fab:fab_label="FIRE!" />
 
-        <com.github.clans.fab.FloatingActionButton
-            android:id="@+id/fab_pin"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_fab_pin"
-            fab:fab_colorPressed="#426fff"
-            fab:fab_colorNormal="#284ae0"
-            fab:fab_size="mini"
-            fab:fab_label="Pin location" />
+
 
     </com.github.clans.fab.FloatingActionMenu>
 

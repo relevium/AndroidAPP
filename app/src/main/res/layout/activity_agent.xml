@@ -1,44 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <ListView
-        android:background="#f1f1f1"
+    <android.support.v7.widget.RecyclerView
+        android:layout_weight="1"
+        android:id="@+id/private_messages_list_of_users"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-    </ListView>
+        android:layout_height="0dp">
+    </android.support.v7.widget.RecyclerView>
+
 
     <LinearLayout
-        android:padding="10dp"
+        android:padding="5dp"
         android:gravity="center"
         android:orientation="horizontal"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true">
+        android:layout_height="wrap_content">
 
         <EditText
             android:background="@drawable/rounded_corners"
             android:paddingBottom="3dp"
             android:layout_weight="4"
-            android:id="@+id/agent_send_text"
+            android:id="@+id/agent_editText"
             android:layout_marginRight="10dp"
             android:layout_width="match_parent"
             android:layout_height="45dp"
             android:hint="Write text..." />
 
-        <ImageView
-            android:layout_weight="1"
-            android:layout_gravity="center"
-            android:foregroundGravity="center"
-            android:id="@+id/agent_send_icon"
-            android:padding="13dp"
-            android:background="@drawable/ic_mic"
+        <RelativeLayout
             android:layout_width="45dp"
-            android:layout_height="45dp"/>
+            android:layout_height="45dp"
+            android:layout_weight="1"
+            android:layout_alignParentEnd="true"
+            android:layout_gravity="center"
+            android:foregroundGravity="center">
+            <ImageView
+                android:contentDescription="mic icon"
+                android:visibility="visible"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/agent_btn_voice"
+                android:padding="13dp"
+                android:background="@drawable/ic_mic"
+            />
+            <ImageView
+                android:contentDescription="send icon"
+                android:visibility="invisible"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/agent_btn_text"
+                android:padding="13dp"
+                android:background="@drawable/ic_send"
+                />
+        </RelativeLayout>
+
 
     </LinearLayout>
-</RelativeLayout>
+</LinearLayout>

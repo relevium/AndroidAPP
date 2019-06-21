@@ -10,8 +10,13 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
 
     <application
+        android:usesCleartextTraffic="true"
+        android:name=".ApplicationController"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -31,15 +36,23 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key" />
 
+        <service
+            android:enabled="true"
+            android:name="com.example.android.releviumfinal.LocationService"
+            android:exported="false"/>
+
         <activity
             android:name=".LoginActivity"
-            android:label="@string/login_activity">
+            android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <service
+            android:name=".CleanService"
+            android:stopWithTask="false" />
         <activity
             android:name=".MainActivity"
             android:parentActivityName=".LoginActivity"
@@ -47,6 +60,14 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".LoginActivity" />
+        </activity>
+        <activity
+            android:name=".ChatHistoryActivity"
+            android:parentActivityName=".MainActivity"
+            android:label="Chat History">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".ChatHistoryActivity" />
         </activity>
         <activity
             android:name=".RegisterActivity"
@@ -58,6 +79,9 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".LoginActivity" />
         </activity>
+        <activity
+            android:name="com.theartofdev.edmodo.cropper.CropImageActivity"
+            android:theme="@style/Base.Theme.AppCompat" />
         <activity
             android:name=".ProfileActivity"
             android:label="@string/profile_category"
@@ -88,6 +112,12 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".MainActivity" />
         </activity>
+        <service android:name=".MyFirebaseMessagingService">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+        <uses-library android:name="org.apache.http.legacy" android:required="false" />
     </application>
 
 </manifest>
