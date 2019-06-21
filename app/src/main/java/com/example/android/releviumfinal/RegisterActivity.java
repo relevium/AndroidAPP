@@ -18,6 +18,8 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.util.regex.Pattern;
+
 public class RegisterActivity extends AppCompatActivity implements View.OnClickListener {
 
 
@@ -27,6 +29,7 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
     private EditText emailEdt;
     private EditText passwordEdt;
     private EditText repasswordEdt;
+    private String passwordRegx = "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$";
 
     private ProgressDialog loadingBar;
 
@@ -91,6 +94,10 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
         if (!password.equals(repassword)) {
             repasswordEdt.setError("password mismatch");
             repasswordEdt.requestFocus();
+            return;
+        }
+        if(!Pattern.compile(passwordRegx).matcher(password).matches()){
+            Toast.makeText(this, "Password must be more than 8 letters with one upper letter, number and a symbol.", Toast.LENGTH_SHORT).show();
             return;
         }
         //progressBar.setVisibility(View.VISIBLE);
