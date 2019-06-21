@@ -7,6 +7,7 @@ import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.TaskStackBuilder;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
@@ -24,15 +25,22 @@ import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.InputFilter;
+import android.text.InputType;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.firebase.geofire.GeoFire;
+import com.firebase.geofire.GeoLocation;
+import com.firebase.geofire.GeoQuery;
 import com.github.clans.fab.FloatingActionButton;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.ApiException;
@@ -73,6 +81,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
+
 import de.hdodenhof.circleimageview.CircleImageView;
 
 public class MainActivity extends AppCompatActivity
@@ -87,6 +96,7 @@ public class MainActivity extends AppCompatActivity
     private NotificationManagerCompat mNotificationManagerPing, mNotificationManagerLocation;
     private static ChildEventListener mPingListener, mUserLocationListener, mUserStatuesListener, mMessageListener, test;
     private ArrayList<Marker> mForeignUserLocation = new ArrayList<>();
+    private ArrayList<Marker> mUserMarkers = new ArrayList<>();
     private String mUserFirstName;
     private String mUserLastName;
     private String mUserUID, mUserEmail, mImageURL;
@@ -97,6 +107,7 @@ public class MainActivity extends AppCompatActivity
     private Marker mUserMarker, mUserAnonymousMarker;
     private Boolean mAnonymityPreference;
     private Target mTarget;
+    public String alertBoxText = "";
 
 
     private CircleImageView userProfileImage;
@@ -108,12 +119,11 @@ public class MainActivity extends AppCompatActivity
     private MapController mapController;
 
 
-    FloatingActionButton mFAB1, mFAB2, mFAB3;
+    FloatingActionButton mFAB1, mFAB3;
 
     private static final int LOCATION_REQUEST_CODE = 1;
 
-    private static final int PIN_IMAGE_ID = 1;
-    private static final int FIRE_IMAGE_ID = 2;
+    private static final int SOS_IMAGE_ID = 1;
     private static final int WARNING_IMAGE_ID = 3;
 
     public static boolean isMyServiceRunning(Activity activity, Class<?> serviceClass) {
@@ -133,7 +143,7 @@ public class MainActivity extends AppCompatActivity
         try {
             startService(new Intent(MainActivity.this, LocationService.class));
             startService(new Intent(MainActivity.this, CleanService.class));
-        }catch (Exception e){
+        } catch (Exception e) {
             Log.v("Test", "Failed to terminate the service.");
         }
 
@@ -185,10 +195,10 @@ public class MainActivity extends AppCompatActivity
                     Picasso.get().load(mImageURL).placeholder(R.drawable.ic_progress_image).into(userProfileImage);
                 }
                 String concatName = (mUserFirstName + " " + mUserLastName);
-                if(mUserAnonymousMarker != null){
+                if (mUserAnonymousMarker != null) {
                     mUserAnonymousMarker.setTitle(concatName);
                 }
-                if(mUserMarker != null){
+                if (mUserMarker != null) {
                     mUserMarker.setTitle(concatName);
                 }
 
@@ -205,24 +215,134 @@ public class MainActivity extends AppCompatActivity
         mFAB1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                addMarkerOnMap("Warning!", R.drawable.ic_menu_sos, WARNING_IMAGE_ID);
+                float distanceDef = 0.0f, lastDistanceDef;
+                for (int i = 0; i < mUserMarkers.size(); i++) {
+                    LatLng markerLatLng = mUserMarkers.get(i).getPosition();
+                    Location markerLocation = new Location("");
+                    markerLocation.setLatitude(markerLatLng.latitude);
+                    markerLocation.setLongitude(markerLatLng.longitude);
+                    lastDistanceDef = distanceDef;
+                    distanceDef = mLastLocation.distanceTo(markerLocation);
+                    Log.e("Markers", "lastDistanceDef is: " + lastDistanceDef);
+                    Log.e("Markers", "distanceDef is: " + distanceDef);
+                    if (i == 0) {
+                        lastDistanceDef = mLastLocation.distanceTo(markerLocation);
+                    }
+                    if (lastDistanceDef < distanceDef) {
+                        distanceDef = lastDistanceDef;
+                    }
+                }
+                Log.e("Markers", "Distance is: " + distanceDef);
+                Log.e("Markers", "If result: " + (distanceDef >= .5f));
+                if (distanceDef >= 500f || mUserMarkers.size() == 0) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                    builder.setTitle("Write a brief description of the situation");
+
+                    final EditText input = new EditText(MainActivity.this);
+                    InputFilter[] filters = new InputFilter[1];
+                    input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_CLASS_TEXT);
+                    filters[0] = new InputFilter.LengthFilter(50);
+                    input.setFilters(filters);
+                    builder.setView(input);
+
+                    builder.setPositiveButton("Add", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            alertBoxText = input.getText().toString();
+                            if (!alertBoxText.equals("")) {
+                                addMarkerOnMap("Warning", alertBoxText, R.drawable.ic_menu_sos, WARNING_IMAGE_ID);
+                            } else {
+                                Toast.makeText(MainActivity.this, "Please write the brief description of the situation", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    });
+                    builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.cancel();
+                        }
+                    });
+                    builder.show();
+                } else {
+                    Toast.makeText(MainActivity.this,
+                            "To add another ping you've to be " + Math.round((500f - distanceDef))
+                                    + " meter away from last ping location", Toast.LENGTH_SHORT)
+                            .show();
+                }
+
+
             }
         });
 
-        mFAB2 = findViewById(R.id.fab_fire);
-        mFAB2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                addMarkerOnMap("Fire", R.drawable.ic_fab_fire, FIRE_IMAGE_ID);
-            }
-        });
 
         mFAB3 = findViewById(R.id.fab_pin);
         mFAB3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                addMarkerOnMap("User Ping", R.drawable.ic_fab_pin, PIN_IMAGE_ID);
+                float distanceDef = 0.0f, lastDistanceDef;
+                for (int i = 0; i < mUserMarkers.size(); i++) {
+                    LatLng markerLatLng = mUserMarkers.get(i).getPosition();
+                    Location markerLocation = new Location("");
+                    markerLocation.setLatitude(markerLatLng.latitude);
+                    markerLocation.setLongitude(markerLatLng.longitude);
+                    lastDistanceDef = distanceDef;
+                    distanceDef = mLastLocation.distanceTo(markerLocation);
+                    Log.e("Markers", "lastDistanceDef is: " + lastDistanceDef);
+                    Log.e("Markers", "distanceDef is: " + distanceDef);
+                    if (i == 0) {
+                        lastDistanceDef = mLastLocation.distanceTo(markerLocation);
+                    }
+                    if (lastDistanceDef < distanceDef) {
+                        distanceDef = lastDistanceDef;
+                    }
+                }
+                Log.e("Markers", "Distance is: " + distanceDef);
+                Log.e("Markers", "If result: " + (distanceDef >= .5f));
+                if (distanceDef >= 500f || mUserMarkers.size() == 0) {
 
+
+                    AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                    builder.setTitle("Write your situation");
+
+                    InputFilter[] filters = new InputFilter[1];
+                    // Set up the input
+                    final EditText input = new EditText(MainActivity.this);
+                    filters[0] = new InputFilter.LengthFilter(50);
+                    input.setFilters(filters);
+                    // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+                    input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_CLASS_TEXT);
+                    builder.setView(input);
+
+                    // Set up the buttons
+                    builder.setPositiveButton("Add", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            alertBoxText = input.getText().toString();
+                            if (alertBoxText.equals("")) {
+                                Log.e("Markers", "Marker Added");
+                                Marker mapMarker = addMarkerOnMap("SOS", "User in Danger!", R.drawable.ic_sos, SOS_IMAGE_ID);
+                                mUserMarkers.add(mapMarker);
+                            } else {
+                                Log.e("Markers", "Marker Added");
+                                Marker mapMarker = addMarkerOnMap("SOS", alertBoxText, R.drawable.ic_sos, SOS_IMAGE_ID);
+                                mUserMarkers.add(mapMarker);
+                            }
+
+                        }
+                    });
+                    builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.cancel();
+                        }
+                    });
+                    builder.show();
+                } else {
+                    Toast.makeText(MainActivity.this,
+                            "To add another ping you've to be " + Math.round((500f - distanceDef))
+                                    + " meter away from last ping location", Toast.LENGTH_SHORT)
+                            .show();
+                }
             }
         });
 
@@ -236,12 +356,12 @@ public class MainActivity extends AppCompatActivity
 
                 Log.v("TEST1", "mPingListener Working");
 
-                final String description;
-                final String imageId;
+                final String description, userID, imageId;
                 final String uuid = dataSnapshot.getKey();
 
                 description = (String) dataSnapshot.child("mDescription").getValue();
                 imageId = dataSnapshot.child("mImageId").getValue().toString();
+                userID = (String) dataSnapshot.child("mUserID").getValue();
 
                 DatabaseReference pingLocation = FirebaseDatabase
                         .getInstance()
@@ -251,24 +371,28 @@ public class MainActivity extends AppCompatActivity
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                         double lng, lat;
+
                         lat = (double) dataSnapshot.child(uuid).child("l").child("0").getValue();
                         lng = (double) dataSnapshot.child(uuid).child("l").child("1").getValue();
+
                         switch (Integer.parseInt(imageId)) {
-                            case PIN_IMAGE_ID: {
-                                mapController.addMarkerFromDB(lat, lng, description, R.drawable.ic_fab_pin
+                            case SOS_IMAGE_ID: {
+                                Marker mapMarker = mapController.addMarkerFromDB(lat, lng, "SOS", description, R.drawable.ic_sos
                                         , MainActivity.this, mMap);
+                                if (userID.equals(mUserUID)) {
+                                    Log.e("Markers", "Marker added from DB");
+                                    mUserMarkers.add(mapMarker);
+                                }
                                 //sendNotificationDisasterChannel(R.drawable.ic_fab_pin, description);
                                 break;
                             }
-                            case FIRE_IMAGE_ID: {
-                                mapController.addMarkerFromDB(lat, lng, description, R.drawable.ic_fab_fire,
-                                        MainActivity.this, mMap);
-                                //sendNotificationDisasterChannel(R.drawable.ic_fab_fire, description);
-                                break;
-                            }
                             case WARNING_IMAGE_ID: {
-                                mapController.addMarkerFromDB(lat, lng, description, R.drawable.ic_menu_sos,
+                                Marker mapMarker = mapController.addMarkerFromDB(lat, lng, "Warning", description, R.drawable.ic_menu_sos,
                                         MainActivity.this, mMap);
+                                if (userID.equals(mUserUID)) {
+                                    Log.e("Markers", "Marker added from DB");
+                                    mUserMarkers.add(mapMarker);
+                                }
                                 //sendNotificationDisasterChannel(R.drawable.ic_menu_sos, description);
                                 break;
                             }
@@ -601,8 +725,10 @@ public class MainActivity extends AppCompatActivity
                 if (uuid.equals(mUserUID)) {
                     if (image.equals("anonymous")) {
                         mUserAnonymousMarker = foreignUserLocation;
+                        mUserAnonymousMarker.setSnippet("");
                     } else {
                         mUserMarker = foreignUserLocation;
+                        mUserMarker.setSnippet("");
                     }
                 }
                 foreignUserLocation.setTag("UserLocationMarker");
@@ -685,13 +811,15 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-    public void addMarkerOnMap(String msg, int icon, int imageID) {
+    public Marker addMarkerOnMap(String tittle, String msg, int icon, int imageID) {
         if (mLastLocation != null) {
-            mapController.addMarker(mLastLocation.getLatitude(), mLastLocation.getLongitude(),
-                    msg, icon, imageID,
+            Marker userMarker = mapController.addMarker(mLastLocation.getLatitude(), mLastLocation.getLongitude(),
+                    tittle, msg, icon, imageID,
                     MainActivity.this, mMap);
+            return userMarker;
         } else {
             Toast.makeText(MainActivity.this, "Please Turn on GPS", Toast.LENGTH_SHORT).show();
+            return null;
         }
     }
 
@@ -959,8 +1087,8 @@ public class MainActivity extends AppCompatActivity
             Intent profileActivity = new Intent(this, ProfileActivity.class);
             startActivity(profileActivity);
         } else if (id == R.id.nav_chat) {
-           Intent chatHistoryActivity = new Intent(this, ChatHistoryActivity.class);
-           startActivity(chatHistoryActivity);
+            Intent chatHistoryActivity = new Intent(this, ChatHistoryActivity.class);
+            startActivity(chatHistoryActivity);
         } else if (id == R.id.nav_share) {
             String shareSubject = "User Location using Relevium APP";
             String Uri = "http://maps.google.com/maps?daddr=" + mLastLocation.getLatitude() + "," + mLastLocation.getLongitude();
@@ -976,15 +1104,14 @@ public class MainActivity extends AppCompatActivity
             if (isIntentSafe) {
                 startActivity(Intent.createChooser(sharingIntent, "Share via"));
             }
-        } else if (id == R.id.nav_sos) {
-            Toast.makeText(this, "SOS sent!", Toast.LENGTH_SHORT).show();
         } else if (id == R.id.nav_log_out) {
             FirebaseAuth.getInstance().signOut();
-            if(isMyServiceRunning(MainActivity.this, LocationService.class)){
-                try{
+            if (isMyServiceRunning(MainActivity.this, LocationService.class)) {
+                try {
                     Log.i("Service Terminator", "Service Terminated.");
                     stopService(new Intent(MainActivity.this, LocationService.class));
-                }catch (Exception ex){
+                    updateUserStatus("offline");
+                } catch (Exception ex) {
                     Log.e("Service Terminator", "Failed to stop service!");
                 }
 

@@ -25,10 +25,6 @@
                 android:icon="@drawable/ic_menu_share"
                 android:title="Share location" />
             <item
-                android:id="@+id/nav_sos"
-                android:icon="@drawable/ic_menu_sos"
-                android:title="SOS" />
-            <item
                 android:id="@+id/nav_log_out"
                 android:icon="@drawable/ic_menu_exit"
                 android:title="Log out" />

@@ -20,6 +20,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -38,18 +39,20 @@ public class MapController extends MainActivity {
         this.mUserId = mUserId;
     }
 
-    public void addMarker(double latitude, double longitude, String message, int image, int imageId,
+    public Marker addMarker(double latitude, double longitude, String tittle, String message, int image, int imageId,
                           Context context, GoogleMap mMap) {
         BitmapDescriptor bmp = generateBitmapDescriptorFromRes(context, image);
 
         LatLng userLocation = new LatLng(latitude, longitude);
-        mMap.addMarker(new MarkerOptions()
+        Marker userMarker = mMap.addMarker(new MarkerOptions()
                 .position(userLocation)
-                .title(message)
-                .icon(bmp))
-                .setTag("UserPing");
+                .title(tittle)
+                .snippet(message)
+                .icon(bmp));
+        userMarker.setTag("UserPing");
 
         addMarkerToDatabase(imageId, message, userLocation);
+        return userMarker;
     }
 
     public void addMarkerToDatabase(int imageId, String description, LatLng mLastLocation) {
@@ -109,15 +112,17 @@ public class MapController extends MainActivity {
         return BitmapDescriptorFactory.fromBitmap(bitmap);
     }
 
-    public void addMarkerFromDB(double latitude, double longitude, String message, int image, Context context
+    public Marker addMarkerFromDB(double latitude, double longitude, String tittle, String message, int image, Context context
             , GoogleMap mMap) {
         BitmapDescriptor bmp = generateBitmapDescriptorFromRes(context, image);
         LatLng userLocation = new LatLng(latitude, longitude);
-        mMap.addMarker(new MarkerOptions()
+        Marker mapMarker = mMap.addMarker(new MarkerOptions()
                 .position(userLocation)
-                .title(message)
-                .icon(bmp))
-                .setTag("UserPing");
+                .title(tittle)
+                .snippet(message)
+                .icon(bmp));
+        mapMarker.setTag("UserPing");
+        return mapMarker;
     }
 
     public static Bitmap createCustomMarker(Context context, @DrawableRes int resource, String _name) {
