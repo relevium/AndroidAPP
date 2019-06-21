@@ -46,6 +46,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         FirebaseApp.initializeApp(this);
+        getSupportActionBar().hide();
 
         //get the resource id from xml file
         loginBtn = (Button) findViewById(R.id.login);
