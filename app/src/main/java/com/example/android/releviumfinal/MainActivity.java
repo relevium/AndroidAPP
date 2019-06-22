@@ -124,6 +124,7 @@ public class MainActivity extends AppCompatActivity
     private static final int LOCATION_REQUEST_CODE = 1;
 
     private static final int SOS_IMAGE_ID = 1;
+    private static final int SHELTER_IMAGE_ID = 2;
     private static final int WARNING_IMAGE_ID = 3;
 
     public static boolean isMyServiceRunning(Activity activity, Class<?> serviceClass) {
@@ -250,7 +251,8 @@ public class MainActivity extends AppCompatActivity
                         public void onClick(DialogInterface dialog, int which) {
                             alertBoxText = input.getText().toString();
                             if (!alertBoxText.equals("")) {
-                                addMarkerOnMap("Warning", alertBoxText, R.drawable.ic_menu_sos, WARNING_IMAGE_ID);
+                                Marker mapMarker = addMarkerOnMap("Warning", alertBoxText, R.drawable.ic_menu_sos, WARNING_IMAGE_ID);
+                                mUserMarkers.add(mapMarker);
                             } else {
                                 Toast.makeText(MainActivity.this, "Please write the brief description of the situation", Toast.LENGTH_SHORT).show();
                             }
@@ -297,7 +299,8 @@ public class MainActivity extends AppCompatActivity
                     }
                 }
                 Log.e("Markers", "Distance is: " + distanceDef);
-                Log.e("Markers", "If result: " + (distanceDef >= .5f));
+                Log.e("Markers", "If result: " + (distanceDef >= 500f));
+                Log.e("Markers", "Size " + (mUserMarkers.size() == 0));
                 if (distanceDef >= 500f || mUserMarkers.size() == 0) {
 
 
@@ -380,18 +383,41 @@ public class MainActivity extends AppCompatActivity
                                 Marker mapMarker = mapController.addMarkerFromDB(lat, lng, "SOS", description, R.drawable.ic_sos
                                         , MainActivity.this, mMap);
                                 if (userID.equals(mUserUID)) {
-                                    Log.e("Markers", "Marker added from DB");
-                                    mUserMarkers.add(mapMarker);
+                                    if (mUserMarkers.size() - 1 != -1) {
+                                        if (!mUserMarkers.get(mUserMarkers.size() - 1).getPosition().equals(mapMarker.getPosition())) {
+                                            Log.e("Markers", "Marker added from DB");
+                                            mUserMarkers.add(mapMarker);
+                                            Log.e("Markers", "From DB Size " + mUserMarkers.size());
+                                        }
+                                    } else {
+                                        mUserMarkers.add(mapMarker);
+                                        Log.e("Markers", "From DB Size " + mUserMarkers.size());
+                                    }
+
+
                                 }
                                 //sendNotificationDisasterChannel(R.drawable.ic_fab_pin, description);
+                                break;
+                            }
+                            case SHELTER_IMAGE_ID: {
+                                mapController.addMarkerFromDB(lat, lng, "Shelter", description, R.drawable.ic_shelter,
+                                        MainActivity.this, mMap);
+                                //sendNotificationDisasterChannel(R.drawable.ic_menu_sos, description);
                                 break;
                             }
                             case WARNING_IMAGE_ID: {
                                 Marker mapMarker = mapController.addMarkerFromDB(lat, lng, "Warning", description, R.drawable.ic_menu_sos,
                                         MainActivity.this, mMap);
                                 if (userID.equals(mUserUID)) {
-                                    Log.e("Markers", "Marker added from DB");
-                                    mUserMarkers.add(mapMarker);
+                                    if (mUserMarkers.size() - 1 != -1) {
+                                        if (!mUserMarkers.get(mUserMarkers.size() - 1).getPosition().equals(mapMarker.getPosition())) {
+                                            mUserMarkers.add(mapMarker);
+                                            Log.e("Markers", "From DB Size " + mUserMarkers.size());
+                                        }
+                                    } else {
+                                        Log.e("Markers", "From DB Size " + mUserMarkers.size());
+                                        mUserMarkers.add(mapMarker);
+                                    }
                                 }
                                 //sendNotificationDisasterChannel(R.drawable.ic_menu_sos, description);
                                 break;
@@ -726,12 +752,13 @@ public class MainActivity extends AppCompatActivity
                     if (image.equals("anonymous")) {
                         mUserAnonymousMarker = foreignUserLocation;
                         mUserAnonymousMarker.setSnippet("");
+                        mUserAnonymousMarker.setTag("MyLocationMarker");
                     } else {
                         mUserMarker = foreignUserLocation;
                         mUserMarker.setSnippet("");
+                        mUserMarker.setTag("MyLocationMarker");
                     }
                 }
-                foreignUserLocation.setTag("UserLocationMarker");
                 mForeignUserLocation.add(foreignUserLocation);
 
             }
@@ -866,7 +893,9 @@ public class MainActivity extends AppCompatActivity
             @Override
             public boolean onMarkerClick(Marker marker) {
                 if (marker.getTag().equals("UserLocationMarker")) {
-                    if (marker.getTitle().equals(mUserMarker.getTitle())) {
+                    Log.e("What", mUserMarker.getTag().toString());
+                    Log.e("What", marker.getTag().toString());
+                    if (marker.getTag().equals(mUserMarker.getTag())) {
                         marker.showInfoWindow();
                         return false;
                     } else {

@@ -28,7 +28,7 @@
         android:inputType="textMultiLine"
         android:hint="First name"
         android:textAlignment="center"
-        android:background="@drawable/rounded_corners_login"
+        android:background="@drawable/rounded_corners_edit_text"
         android:textColor="#284ae0"
         android:textStyle="bold"
         android:layout_marginStart="15dp"
@@ -44,7 +44,7 @@
         android:layout_below="@+id/set_user_name"
         android:inputType="textMultiLine"
         android:hint="Last name"
-        android:background="@drawable/rounded_corners_login"
+        android:background="@drawable/rounded_corners_edit_text"
         android:textAlignment="center"
         android:textColor="#284ae0"
         android:textStyle="bold"
@@ -57,7 +57,6 @@
         android:layout_below="@+id/set_profile_status"
         android:id="@+id/blood_spinner"
         style="@android:style/Widget.Spinner"
-        android:background="@drawable/rounded_corners_login"
         android:layout_marginStart="15dp"
         android:layout_marginTop="10dp"
         android:layout_marginEnd="15dp"
@@ -68,7 +67,7 @@
         android:layout_height="wrap_content"
         android:entries="@array/blood_array"
         android:prompt="@string/blood_prompt">
-        
+
     </Spinner>
     <Switch
         android:layout_width="wrap_content"
@@ -121,7 +120,7 @@
         android:textSize="20sp"
         app:backgroundTint="#2F67A6"
         android:textColor="#FFFFFF"
-        android:background="@drawable/login_button"
+        android:background="@drawable/custom_button"
         />
 
 </RelativeLayout>

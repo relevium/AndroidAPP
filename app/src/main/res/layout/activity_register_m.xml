@@ -10,7 +10,7 @@
     tools:context=".MainActivity">
 
     <EditText
-        android:background="@drawable/rounded_corners_login"
+        android:background="@drawable/rounded_corners_edit_text"
         android:layout_width="300dp"
         android:layout_height="wrap_content"
         android:inputType="text"
@@ -23,7 +23,7 @@
         android:layout_marginBottom="20dp"
         android:gravity="center"/>
     <EditText
-        android:background="@drawable/rounded_corners_login"
+        android:background="@drawable/rounded_corners_edit_text"
         android:layout_width="300dp"
         android:layout_height="wrap_content"
         android:inputType="text"
@@ -35,7 +35,7 @@
         android:layout_marginBottom="20dp"
         android:gravity="center"/>
     <EditText
-        android:background="@drawable/rounded_corners_login"
+        android:background="@drawable/rounded_corners_edit_text"
         android:layout_width="300dp"
         android:layout_height="wrap_content"
         android:inputType="textEmailAddress"
@@ -47,7 +47,7 @@
         android:layout_marginBottom="20dp"
         android:gravity="center"/>
     <EditText
-        android:background="@drawable/rounded_corners_login"
+        android:background="@drawable/rounded_corners_edit_text"
         android:layout_width="300dp"
         android:layout_height="wrap_content"
         android:inputType="textPassword"
@@ -59,7 +59,7 @@
         android:layout_marginBottom="20dp"
         android:gravity="center"/>
     <EditText
-        android:background="@drawable/rounded_corners_login"
+        android:background="@drawable/rounded_corners_edit_text"
         android:layout_width="300dp"
         android:layout_height="wrap_content"
         android:inputType="textPassword"
@@ -82,7 +82,7 @@
         android:layout_marginRight="20dp"
         android:layout_marginBottom="6dp"
         app:backgroundTint="#284ae0"
-        android:background="@drawable/register_button"
+        android:background="@drawable/custom_button"
         android:textColor="#FFFFFF"
         />
 

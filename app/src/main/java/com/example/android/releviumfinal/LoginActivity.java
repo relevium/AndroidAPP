@@ -2,6 +2,7 @@ package com.example.android.releviumfinal;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -44,7 +45,13 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             finish();
         }
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_login);
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
+            setContentView(R.layout.activity_login);
+        } else {
+
+            setContentView(R.layout.activity_login_m);
+        }
+
         FirebaseApp.initializeApp(this);
         getSupportActionBar().hide();
 
@@ -54,7 +61,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
         userNameEdt = (EditText) findViewById(R.id.username);
         passwordEdt = (EditText) findViewById(R.id.password);
-
 
         loadingBar = new ProgressDialog(LoginActivity.this);
 

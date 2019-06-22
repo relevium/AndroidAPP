@@ -3,6 +3,7 @@ package com.example.android.releviumfinal;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -54,7 +55,13 @@ public class ProfileActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_profile);
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
+            setContentView(R.layout.activity_profile);
+        } else {
+
+            setContentView(R.layout.activity_profile_m);
+        }
+
 
 
         mAuth = FirebaseAuth.getInstance();
